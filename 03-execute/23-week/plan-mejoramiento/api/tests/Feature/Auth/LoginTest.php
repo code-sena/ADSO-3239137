@@ -35,4 +35,25 @@ class LoginTest extends TestCase
             ])
             ->assertJsonMissingPath('user.password');
     }
+
+    public function test_user_cannot_login_with_invalid_password(): void
+    {
+        User::create([
+            'name' => 'Test Manager',
+            'username' => 'testmanager',
+            'email' => 'manager@example.com',
+            'password' => 'Password123!',
+            'role' => 'manager',
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'manager@example.com',
+            'password' => 'WrongPassword123!',
+        ]);
+
+        $response->assertUnauthorized()
+            ->assertJsonPath('message', 'Invalid credentials.');
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
 }
