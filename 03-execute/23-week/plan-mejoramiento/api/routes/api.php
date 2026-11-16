@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BeneficiaryController;
+use App\Http\Controllers\TechnicalAidController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,4 +46,15 @@ Route::middleware('auth:sanctum')->group(function () {
     */
 
     Route::apiResource('beneficiaries', BeneficiaryController::class);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Technical Aids Management
+    |--------------------------------------------------------------------------
+    */
+
+    Route::apiResource('technical-aids', TechnicalAidController::class)
+        ->parameters([
+            'technical-aids' => 'technicalAid',
+        ]);
 });

@@ -15,8 +15,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class TechnicalAid extends Model
 {
+    /**
+     * Get the category associated with this technical aid.
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(TechnicalAidCategory::class);
+    }
+
+    /**
+     * Get the model attribute casting definitions.
+     */
+    protected function casts(): array
+    {
+        return [
+            'category_id' => 'integer',
+            'total_units' => 'integer',
+            'available_units' => 'integer',
+            'is_active' => 'boolean',
+        ];
     }
 }
