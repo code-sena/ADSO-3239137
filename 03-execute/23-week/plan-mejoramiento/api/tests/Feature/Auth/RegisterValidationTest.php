@@ -58,4 +58,18 @@ class RegisterValidationTest extends TestCase
         $response->assertUnprocessable()
             ->assertJsonValidationErrors(['password']);
     }
+
+    public function test_registration_rejects_an_invalid_email_format(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'New Manager',
+            'username' => 'newmanager',
+            'email' => 'correo-invalido',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['email']);
+    }
 }
