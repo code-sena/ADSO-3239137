@@ -45,6 +45,28 @@ class RegisterValidationTest extends TestCase
             ->assertJsonValidationErrors(['email']);
     }
 
+    public function test_registration_rejects_an_existing_username(): void
+    {
+        User::create([
+            'name' => 'Existing Manager',
+            'username' => 'existingmanager',
+            'email' => 'manager@example.com',
+            'password' => 'Password123!',
+            'role' => 'manager',
+        ]);
+
+        $response = $this->postJson('/api/register', [
+            'name' => 'New Manager',
+            'username' => 'existingmanager',
+            'email' => 'newmanager@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['username']);
+    }
+
     public function test_registration_rejects_a_short_password(): void
     {
         $response = $this->postJson('/api/register', [
