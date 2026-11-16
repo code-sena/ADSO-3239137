@@ -15,4 +15,12 @@ class AuthenticationMiddlewareTest extends TestCase
 
         $response->assertUnauthorized();
     }
+
+    public function test_user_cannot_access_authenticated_route_with_invalid_token(): void
+    {
+        $response = $this->withToken('invalid-token')
+            ->getJson('/api/user');
+
+        $response->assertUnauthorized();
+    }
 }
