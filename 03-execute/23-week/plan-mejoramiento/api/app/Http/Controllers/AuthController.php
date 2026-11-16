@@ -20,7 +20,6 @@ class AuthController extends Controller
             'username' => ['required', 'string', 'max:50', 'unique:users,username'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
-            'role' => ['required', 'in:admin,manager'],
         ]);
 
         $user = User::create([
@@ -28,7 +27,7 @@ class AuthController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
+            'role' => 'manager',
         ]);
 
         $token = $user->createToken('mobility-aids-token')->plainTextToken;

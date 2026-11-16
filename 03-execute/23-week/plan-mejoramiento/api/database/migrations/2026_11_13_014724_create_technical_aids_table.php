@@ -27,11 +27,13 @@ return new class extends Migration
             $table->index(['is_active', 'category_id']);
         });
 
-        DB::statement(
-            'ALTER TABLE technical_aids
-             ADD CONSTRAINT chk_technical_aids_available_units
-             CHECK (available_units <= total_units)'
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                'ALTER TABLE technical_aids
+                 ADD CONSTRAINT chk_technical_aids_available_units
+                 CHECK (available_units <= total_units)'
+            );
+        }
     }
 
     public function down(): void
