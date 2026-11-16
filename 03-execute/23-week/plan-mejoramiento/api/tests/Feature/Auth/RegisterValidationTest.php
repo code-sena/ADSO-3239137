@@ -94,4 +94,18 @@ class RegisterValidationTest extends TestCase
         $response->assertUnprocessable()
             ->assertJsonValidationErrors(['email']);
     }
+
+    public function test_registration_rejects_password_confirmation_mismatch(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'New Manager',
+            'username' => 'newmanager',
+            'email' => 'newmanager@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'DifferentPassword123!',
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['password']);
+    }
 }
