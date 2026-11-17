@@ -42,11 +42,13 @@ class BeneficiaryApiTest extends TestCase
     }
 
     /**
-     * Verify that authenticated users can list beneficiaries.
+     * Verify that authenticated managers can list beneficiaries.
      */
     public function test_authenticated_users_can_list_beneficiaries(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'role' => 'manager',
+        ]);
 
         Beneficiary::create([
             'full_name' => 'Juan Perez',
@@ -72,6 +74,26 @@ class BeneficiaryApiTest extends TestCase
                     ],
                 ],
             ]);
+    }
+
+    /**
+     * Verify that administrators can list beneficiaries.
+     */
+    public function test_admin_users_can_list_beneficiaries(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        Beneficiary::create([
+            'full_name' => 'Carlos Ramirez',
+            'identification_number' => '456789123',
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/beneficiaries')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
     }
 
     /**

@@ -50,6 +50,10 @@ class LoanApiTest extends TestCase
         ]);
     }
 
+    // ==========================================
+    // REGISTRO DE PRÉSTAMOS
+    // ==========================================
+
     public function test_manager_can_register_a_loan(): void
     {
         Sanctum::actingAs($this->manager);
@@ -69,51 +73,8 @@ class LoanApiTest extends TestCase
             'id' => $this->technicalAid->id,
             'available_units' => 4,
         ]);
-
+ 
         }
-
-    public function test_manager_can_return_a_loan_item(): void
-    {
-        Sanctum::actingAs($this->manager);
-
-        $loan = $this->createLoan();
-
-        $line = $loan->loanLines()->first();
-
-        $response = $this->postJson(
-            "/api/loans/{$loan->id}/items/{$line->id}/return"
-        );
-
-        $response->assertOk();
-
-        $this->assertDatabaseHas('loan_lines', [
-            'id' => $line->id,
-        ]);
-
-
-
-        $this->assertDatabaseHas('technical_aids', [
-            'id' => $this->technicalAid->id,
-            'available_units' => 5,
-        ]);
-    }
-
-    public function test_manager_cannot_return_same_item_twice(): void
-    {
-        Sanctum::actingAs($this->manager);
-
-        $loan = $this->createLoan();
-
-        $line = $loan->loanLines()->first();
-
-        $this->postJson(
-            "/api/loans/{$loan->id}/items/{$line->id}/return"
-        )->assertOk();
-
-        $this->postJson(
-            "/api/loans/{$loan->id}/items/{$line->id}/return"
-        )->assertStatus(409);
-    }
 
     public function test_manager_cannot_register_loan_for_beneficiary_with_overdue_items(): void
     {
@@ -150,6 +111,97 @@ class LoanApiTest extends TestCase
 
         $response->assertStatus(409);
     }
+
+    // ==========================================
+    // REGLAS DE NEGOCIO DE LOS PRÉSTAMOS
+    // ==========================================
+
+    public function test_manager_cannot_have_more_than_two_pending_items(): void
+    {
+        Sanctum::actingAs($this->manager);
+
+        // El beneficiario ya tiene dos ayudas pendientes.
+        $this->createLoan();
+        $this->createLoan();
+
+        // Intentamos registrar una tercera ayuda.
+        $response = $this->postJson('/api/loans', [
+            'beneficiary_id' => $this->beneficiary->id,
+            'items' => [
+                ['technical_aid_id' => $this->technicalAid->id],
+            ],
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_manager_cannot_register_duplicate_technical_aid_in_same_loan(): void
+    {
+        Sanctum::actingAs($this->manager);
+
+        $response = $this->postJson('/api/loans', [
+            'beneficiary_id' => $this->beneficiary->id,
+            'items' => [
+                ['technical_aid_id' => $this->technicalAid->id],
+                ['technical_aid_id' => $this->technicalAid->id],
+            ],
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    // ==========================================
+    // DEVOLUCIÓN DE AYUDAS TÉCNICAS
+    // ==========================================
+
+    public function test_manager_can_return_a_loan_item(): void
+    {
+        Sanctum::actingAs($this->manager);
+
+        $loan = $this->createLoan();
+
+        $line = $loan->loanLines()->first();
+
+        $response = $this->postJson(
+            "/api/loans/{$loan->id}/items/{$line->id}/return"
+        );
+
+        $response->assertOk();
+
+        $this->assertNotNull(
+            LoanLine::findOrFail($line->id)->returned_at
+        );
+
+        $this->assertDatabaseHas('loan_lines', [
+            'id' => $line->id,
+        ]);
+
+        $this->assertDatabaseHas('technical_aids', [
+            'id' => $this->technicalAid->id,
+            'available_units' => 5,
+        ]);
+    }
+
+    public function test_manager_cannot_return_same_item_twice(): void
+    {
+        Sanctum::actingAs($this->manager);
+
+        $loan = $this->createLoan();
+
+        $line = $loan->loanLines()->first();
+
+        $this->postJson(
+            "/api/loans/{$loan->id}/items/{$line->id}/return"
+        )->assertOk();
+
+        $this->postJson(
+            "/api/loans/{$loan->id}/items/{$line->id}/return"
+        )->assertStatus(409);
+    }
+
+    // ==========================================
+    // CONSULTA DEL HISTORIAL
+    // ==========================================
 
     public function test_manager_can_view_loan_history(): void
     {
@@ -197,6 +249,22 @@ class LoanApiTest extends TestCase
         $this->getJson('/api/loans?status=overdue')
             ->assertOk();
     }
+
+    public function test_manager_can_view_overdue_loans(): void
+    {
+        $this->createLoan([
+            'due_at' => now()->subDays(2),
+        ]);
+
+        Sanctum::actingAs($this->manager);
+
+        $this->getJson('/api/loans/overdue')
+            ->assertOk();
+    }
+
+    // ==========================================
+    // PERMISOS DEL ADMINISTRADOR
+    // ==========================================
 
     public function test_admin_cannot_register_a_loan(): void
     {
@@ -246,17 +314,9 @@ class LoanApiTest extends TestCase
             ->assertOk();
     }
 
-    public function test_manager_can_view_overdue_loans(): void
-    {
-        $this->createLoan([
-            'due_at' => now()->subDays(2),
-        ]);
-
-        Sanctum::actingAs($this->manager);
-
-        $this->getJson('/api/loans/overdue')
-            ->assertOk();
-    }
+    // ==========================================
+    // MÉTODOS AUXILIARES
+    // ==========================================
 
     private function createLoan(array $lineAttributes = []): Loan
     {
