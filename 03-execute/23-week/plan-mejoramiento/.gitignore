@@ -1,0 +1,94 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+.env.txt
+
+# Composer and Node dependencies
+**/vendor/
+**/node_modules/
+**/public/build/
+**/public/hot
+
+# Laravel generated files
+**/bootstrap/cache/*.php
+**/storage/*.key
+
+# Ignore generated storage contents, but preserve Laravel placeholders
+**/storage/framework/cache/**
+!**/storage/framework/cache/
+!**/storage/framework/cache/**/
+!**/storage/framework/cache/**/.gitignore
+
+**/storage/framework/sessions/**
+!**/storage/framework/sessions/
+!**/storage/framework/sessions/**/
+!**/storage/framework/sessions/**/.gitignore
+
+**/storage/framework/testing/**
+!**/storage/framework/testing/
+!**/storage/framework/testing/**/
+!**/storage/framework/testing/**/.gitignore
+
+**/storage/framework/views/**
+!**/storage/framework/views/
+!**/storage/framework/views/**/
+!**/storage/framework/views/**/.gitignore
+
+**/storage/logs/*
+!**/storage/logs/.gitignore
+
+# PHPUnit cache
+.phpunit.cache/
+.phpunit.result.cache
+
+# IDE and operating s@'
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+.env.txt
+
+# Composer and Node dependencies
+**/vendor/
+**/node_modules/
+**/public/build/
+**/public/hot
+
+# Laravel generated files
+**/bootstrap/cache/*.php
+**/storage/*.key
+
+# Ignore generated storage contents, but preserve Laravel placeholders
+**/storage/framework/cache/**
+!**/storage/framework/cache/
+!**/storage/framework/cache/**/
+!**/storage/framework/cache/**/.gitignore
+
+**/storage/framework/sessions/**
+!**/storage/framework/sessions/
+!**/storage/framework/sessions/**/
+!**/storage/framework/sessions/**/.gitignore
+
+**/storage/framework/testing/**
+!**/storage/framework/testing/
+!**/storage/framework/testing/**/
+!**/storage/framework/testing/**/.gitignore
+
+**/storage/framework/views/**
+!**/storage/framework/views/
+!**/storage/framework/views/**/
+!**/storage/framework/views/**/.gitignore
+
+**/storage/logs/*
+!**/storage/logs/.gitignore
+
+# PHPUnit cache
+.phpunit.cache/
+.phpunit.result.cache
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
