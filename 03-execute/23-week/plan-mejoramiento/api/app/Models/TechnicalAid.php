@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\UsesUuidV4;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class TechnicalAid extends Model
 {
+    use UsesUuidV4;
+
     /**
      * Get the category associated with this technical aid.
      */
@@ -28,8 +31,7 @@ class TechnicalAid extends Model
      */
     protected function casts(): array
     {
-        return [
-            'category_id' => 'integer',
+    return [
             'total_units' => 'integer',
             'available_units' => 'integer',
             'is_active' => 'boolean',

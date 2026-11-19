@@ -19,7 +19,7 @@ class TechnicalAidController extends Controller
             'q' => ['nullable', 'string', 'max:255'],
             'category_id' => [
                 'nullable',
-                'integer',
+                'uuid',
                 'exists:technical_aid_categories,id',
             ],
             'page' => ['sometimes', 'integer', 'min:1'],
@@ -87,7 +87,7 @@ class TechnicalAidController extends Controller
         $validated = $request->validate([
             'category_id' => [
                 'required',
-                'integer',
+                'uuid',
                 'exists:technical_aid_categories,id',
             ],
             'reference' => [
@@ -150,7 +150,7 @@ class TechnicalAidController extends Controller
             'category_id' => [
                 'sometimes',
                 'required',
-                'integer',
+                'uuid',
                 'exists:technical_aid_categories,id',
             ],
             'reference' => [

@@ -15,14 +15,17 @@ use Illuminate\Validation\ValidationException;
 
 class LoanController extends Controller
 {
-
-public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'status' => ['nullable', 'in:open,overdue,closed'],
-            'beneficiary_id' => ['nullable', 'integer', 'exists:beneficiaries,id'],
+            'beneficiary_id' => [
+                'nullable',
+                'uuid',
+                'exists:beneficiaries,id',
+            ],
             'page' => ['nullable', 'integer', 'min:1'],
             'size' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
@@ -92,13 +95,13 @@ public function index(Request $request): JsonResponse
         $validated = $request->validate([
             'beneficiary_id' => [
                 'required',
-                'integer',
+                'uuid',
                 'exists:beneficiaries,id',
             ],
             'items' => ['required', 'array', 'min:1'],
             'items.*.technical_aid_id' => [
                 'required',
-                'integer',
+                'uuid',
                 'distinct',
                 'exists:technical_aids,id',
             ],
@@ -199,8 +202,7 @@ public function index(Request $request): JsonResponse
         );
     }
 
-
-    public function show(int $id): JsonResponse
+    public function show(string $id): JsonResponse
     {
         $loan = Loan::query()
             ->with(['beneficiary', 'loanLines'])
@@ -211,7 +213,7 @@ public function index(Request $request): JsonResponse
         );
     }
 
-    public function returnLine(Request $request, int $loanId, int $itemId): JsonResponse
+    public function returnLine(Request $request, string $loanId, string $itemId): JsonResponse
     {
         if ($request->user()->role !== 'manager') {
             abort(403, 'Solo los gestores pueden registrar devoluciones.');
@@ -289,8 +291,6 @@ public function index(Request $request): JsonResponse
             'items' => $items,
         ]);
     }
-
-
     private function formatLoan(Loan $loan, Carbon $now): array
     {
         $lines = $loan->loanLines;
