@@ -17,6 +17,7 @@ class LoanLine extends Model
         'category_snapshot',
         'due_at',
         'returned_at',
+        'return_condition',
     ];
 
     protected function casts(): array
