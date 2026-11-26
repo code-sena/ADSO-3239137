@@ -13,15 +13,14 @@ import {
   X,
 } from "lucide-react";
 import api from "../../services/api";
+import { getUiErrorMessage, localizeUiMessage } from "../../services/uiMessages";
 import "./List.css";
 import beneficiariesBanner from "../../assets/images/beneficiaries-banner.png";
 
 const PAGE_SIZE = 10;
 
 function getErrorMessage(error) {
-  const validation = error?.response?.data?.errors;
-  if (validation) return Object.values(validation).flat().join(" ");
-  return error?.response?.data?.message || "The operation could not be completed.";
+  return getUiErrorMessage(error);
 }
 
 export default function Page() {
@@ -120,10 +119,10 @@ export default function Page() {
     try {
       if (editingId) {
         await api.put(`/beneficiaries/${editingId}`, payload);
-        setSuccess("Beneficiary details were updated successfully.");
+        setSuccess("Los datos del beneficiario se actualizaron correctamente.");
       } else {
         await api.post("/beneficiaries", payload);
-        setSuccess("Beneficiary was registered successfully.");
+        setSuccess("El beneficiario se registró correctamente.");
         setPage(1);
       }
 
@@ -161,8 +160,9 @@ export default function Page() {
         await loadBeneficiaries();
       }
     } catch (requestError) {
-      const serverMessage = String(
-        requestError?.response?.data?.message || ""
+      const serverMessage = localizeUiMessage(
+        requestError?.response?.data?.message,
+        ""
       );
       const normalizedMessage = serverMessage.toLowerCase();
 
@@ -174,9 +174,9 @@ export default function Page() {
       setDeleteTarget(null);
       setDeleteError(
         hasLoanHistory
-          ? "Los beneficiarios que tienen historial de préstamos no pueden eliminarse."
-          : "No fue posible eliminar el beneficiario. " +
-              (serverMessage || "Inténtalo nuevamente o contacta al administrador.")
+          ? "No se pueden eliminar beneficiarios con préstamos registrados."
+          : "No fue posible eliminar al beneficiario. " +
+              (serverMessage || "Inténtalo nuevamente o contacta a un administrador.")
       );
     } finally {
       setDeletingId(null);
@@ -189,12 +189,12 @@ export default function Page() {
         <section className="beneficiaries-hero">
           <img className="beneficiaries-hero-image" src={beneficiariesBanner} alt="" aria-hidden="true" />
           <div className="beneficiaries-hero-content">
-            <span className="beneficiaries-eyebrow">MOBILITY AIDS · PEOPLE</span>
+            <span className="beneficiaries-eyebrow">Mobility Aids · Personas</span>
             <div className="beneficiaries-hero-title">
               <span className="beneficiaries-hero-icon"><Users size={31} /></span>
               <div>
-                <h2>Beneficiaries</h2>
-                <p>Management and follow-up of people receiving mobility aids.</p>
+                <h2>Beneficiarios</h2>
+                <p>Gestión y seguimiento de las personas que reciben ayudas para la movilidad.</p>
                 <span className="beneficiaries-hero-line" />
               </div>
             </div>
@@ -208,7 +208,7 @@ export default function Page() {
           <div className="beneficiaries-alert beneficiaries-alert-error" role="alert">
             <AlertCircle size={18} />
             <span>{error}</span>
-            <button onClick={() => setError("")} aria-label="Close"><X size={17} /></button>
+            <button onClick={() => setError("")} aria-label="Cerrar"><X size={17} /></button>
           </div>
         )}
 
@@ -216,7 +216,7 @@ export default function Page() {
           <div className="beneficiaries-alert beneficiaries-alert-success" role="status">
             <CheckCircle2 size={18} />
             <span>{success}</span>
-            <button onClick={() => setSuccess("")} aria-label="Close"><X size={17} /></button>
+            <button onClick={() => setSuccess("")} aria-label="Cerrar"><X size={17} /></button>
           </div>
         )}
 
@@ -225,14 +225,14 @@ export default function Page() {
             <span className="beneficiaries-summary-icon beneficiaries-blue"><Users size={21} /></span>
             <div>
               <strong>{total}</strong>
-              <span>Registered beneficiaries</span>
+              <span>Beneficiarios registrados</span>
             </div>
           </article>
           <article className="beneficiaries-summary-card">
             <span className="beneficiaries-summary-icon beneficiaries-green"><CheckCircle2 size={21} /></span>
             <div>
               <strong>{beneficiaries.length}</strong>
-              <span>On this page</span>
+              <span>En esta página</span>
             </div>
           </article>
         </section>
@@ -242,12 +242,12 @@ export default function Page() {
             <div className="beneficiaries-list-title">
               <span><Users size={19} /></span>
               <div>
-                <h3>Beneficiary Directory</h3>
-                <p>{total} records in the system</p>
+                <h3>Directorio de beneficiarios</h3>
+                <p>{total} registros en el sistema</p>
               </div>
             </div>
             <button className="beneficiaries-primary" onClick={openCreate}>
-              <Plus size={17} /> Add Beneficiary
+              <Plus size={17} /> Agregar beneficiario
             </button>
           </header>
 
@@ -258,7 +258,7 @@ export default function Page() {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by name or identification number..."
+                placeholder="Buscar por nombre o número de identificación..."
               />
             </label>
             <button
@@ -267,27 +267,27 @@ export default function Page() {
               disabled={loading}
             >
               <RefreshCw size={16} className={loading ? "beneficiaries-spin" : ""} />
-              Refresh
+              Actualizar
             </button>
           </div>
 
           {loading ? (
             <div className="beneficiaries-empty">
               <RefreshCw size={23} className="beneficiaries-spin" />
-              <span>Loading beneficiaries...</span>
+              <span>Cargando beneficiarios...</span>
             </div>
           ) : visibleBeneficiaries.length === 0 ? (
             <div className="beneficiaries-empty">
               <Users size={30} />
-              <strong>{search ? "No matching beneficiaries found" : "No beneficiaries registered yet"}</strong>
+              <strong>{search ? "No se encontraron beneficiarios coincidentes" : "Todavía no hay beneficiarios registrados"}</strong>
               <span>
                 {search
-                  ? "Try another name or identification number."
-                  : "Register the first beneficiary to assign mobility aids."}
+                  ? "Prueba con otro nombre o número de identificación."
+                  : "Registra al primer beneficiario para asignarle ayudas técnicas."}
               </span>
               {!search && (
                 <button className="beneficiaries-primary" onClick={openCreate}>
-                  <Plus size={16} /> Add Beneficiary
+                  <Plus size={16} /> Agregar beneficiario
                 </button>
               )}
             </div>
@@ -296,10 +296,10 @@ export default function Page() {
               <table className="beneficiaries-table">
                 <thead>
                   <tr>
-                    <th>Beneficiary</th>
-                    <th>Identification Number</th>
-                    <th>Record Status</th>
-                    <th>Actions</th>
+                    <th>Beneficiario</th>
+                    <th>Número de identificación</th>
+                    <th>Estado del registro</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -316,7 +316,7 @@ export default function Page() {
                       <td>{beneficiary.identification_number}</td>
                       <td>
                         <span className="beneficiaries-record-status">
-                          <CheckCircle2 size={14} /> Registered
+                          <CheckCircle2 size={14} /> Registrado
                         </span>
                       </td>
                       <td>
@@ -324,8 +324,8 @@ export default function Page() {
                           <button
                             className="beneficiaries-edit"
                             onClick={() => openEdit(beneficiary)}
-                            title="Edit beneficiary"
-                            aria-label={`Edit ${beneficiary.full_name}`}
+                            title="Editar beneficiario"
+                            aria-label={`Editar a ${beneficiary.full_name}`}
                           >
                             <Edit3 size={16} />
                           </button>
@@ -333,8 +333,8 @@ export default function Page() {
                             className="beneficiaries-delete"
                             onClick={() => handleDelete(beneficiary)}
                             disabled={deletingId === beneficiary.id}
-                            title="Delete beneficiary"
-                            aria-label={`Delete ${beneficiary.full_name}`}
+                            title="Eliminar beneficiario"
+                            aria-label={`Eliminar a ${beneficiary.full_name}`}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -348,19 +348,19 @@ export default function Page() {
           )}
 
           <footer className="beneficiaries-pagination">
-            <span>Page {page} of {lastPage}</span>
+            <span>Página {page} de {lastPage}</span>
             <div>
               <button
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={page <= 1 || loading}
-                aria-label="Previous page"
+                aria-label="Página anterior"
               >
                 <ArrowLeft size={16} />
               </button>
               <button
                 onClick={() => setPage((current) => Math.min(lastPage, current + 1))}
                 disabled={page >= lastPage || loading}
-                aria-label="Next page"
+                aria-label="Página siguiente"
               >
                 <ArrowRight size={16} />
               </button>
@@ -414,7 +414,7 @@ export default function Page() {
               type="button"
               onClick={() => setDeleteTarget(null)}
               disabled={Boolean(deletingId)}
-              aria-label="Cerrar ventana"
+              aria-label="Cerrar diálogo"
               style={{
                 position: "absolute",
                 top: "25px",
@@ -460,7 +460,7 @@ export default function Page() {
                   letterSpacing: "1.7px",
                 }}
               >
-                MOBILITY AIDS · GESTIÓN DE BENEFICIARIOS
+                Mobility Aids · Gestión de beneficiarios
               </span>
 
               <h2
@@ -485,7 +485,7 @@ export default function Page() {
                   lineHeight: 1.7,
                 }}
               >
-                ¿Estás seguro de que deseas eliminar este beneficiario?
+                ¿Confirmas que deseas eliminar a este beneficiario?
                 Revisa la información antes de continuar.
               </p>
 
@@ -523,7 +523,7 @@ export default function Page() {
                   {deleteTarget.full_name}
                 </strong>
                 <span style={{ color: "#B97816", fontSize: "14px", fontWeight: 700 }}>
-                  Documento: {deleteTarget.identification_number || "No disponible"}
+                  Número de identificación: {deleteTarget.identification_number || "No disponible"}
                 </span>
               </div>
 
@@ -546,8 +546,8 @@ export default function Page() {
               >
                 <AlertCircle size={18} style={{ flexShrink: 0, marginTop: "1px" }} />
                 <span>
-                  Esta acción puede afectar los registros relacionados con el beneficiario.
-                  Si existen préstamos asociados, el sistema aplicará sus reglas de protección.
+                  Esta acción puede afectar los registros asociados al beneficiario.
+                  Si tiene préstamos asociados, el sistema aplicará sus reglas de protección.
                 </span>
               </div>
 
@@ -668,7 +668,7 @@ export default function Page() {
                   letterSpacing: "1.5px",
                 }}
               >
-                MOBILITY AIDS · GESTIÓN DE BENEFICIARIOS
+                Mobility Aids · Gestión de beneficiarios
               </span>
 
               <h2
@@ -693,7 +693,7 @@ export default function Page() {
                   lineHeight: 1.65,
                 }}
               >
-                El sistema no puede completar esta operación.
+                El sistema no pudo completar esta acción.
               </p>
 
               <div
@@ -757,41 +757,41 @@ export default function Page() {
           >
             <header className="beneficiaries-modal-header">
               <div>
-                <span className="beneficiaries-eyebrow">MOBILITY AIDS · BENEFICIARY RECORD</span>
+                <span className="beneficiaries-eyebrow">Mobility Aids · Registro de beneficiario</span>
                 <h2 id="beneficiaries-modal-title">
-                  {editingId ? "Edit Beneficiary" : "Register Beneficiary"}
+                  {editingId ? "Editar beneficiario" : "Registrar beneficiario"}
                 </h2>
-                <p>Enter the beneficiary’s basic information.</p>
+                <p>Ingresa la información básica del beneficiario.</p>
               </div>
               <button
                 className="beneficiaries-close"
                 onClick={() => setModalOpen(false)}
                 disabled={saving}
-                aria-label="Close"
+                aria-label="Cerrar"
               >
                 <X size={20} />
               </button>
             </header>
 
             <form onSubmit={handleSubmit}>
-              <label htmlFor="beneficiary-name">Full Name</label>
+              <label htmlFor="beneficiary-name">Nombre completo</label>
               <input
                 id="beneficiary-name"
                 type="text"
                 value={form.full_name}
                 onChange={(event) => setForm((current) => ({ ...current, full_name: event.target.value }))}
-                placeholder="e.g. Maria Garcia Lopez"
+                placeholder="Ej.: María García López"
                 maxLength={255}
                 required
               />
 
-              <label htmlFor="beneficiary-identification">Identification Number</label>
+              <label htmlFor="beneficiary-identification">Número de identificación</label>
               <input
                 id="beneficiary-identification"
                 type="text"
                 value={form.identification_number}
                 onChange={(event) => setForm((current) => ({ ...current, identification_number: event.target.value }))}
-                placeholder="Enter identification number"
+                placeholder="Ingresa el número de identificación"
                 maxLength={50}
                 required
               />
@@ -809,10 +809,10 @@ export default function Page() {
                   onClick={() => setModalOpen(false)}
                   disabled={saving}
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button type="submit" className="beneficiaries-primary" disabled={saving}>
-                  {saving ? "Saving..." : editingId ? "Save Changes" : "Register Beneficiary"}
+                  {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Registrar beneficiario"}
                 </button>
               </footer>
             </form>

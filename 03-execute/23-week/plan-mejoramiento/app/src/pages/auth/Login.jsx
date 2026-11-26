@@ -17,6 +17,7 @@ import wheelchair from "../../assets/images/Cilla_Rueda.png";
 
 import api from "../../services/api";
 import { saveAuth } from "../../services/auth";
+import { localizeUiMessage } from "../../services/uiMessages";
 
 import "./Login.css";
 
@@ -44,7 +45,7 @@ export default function Login() {
       const { token, user } = response.data;
 
       if (!token || !user) {
-        throw new Error("Invalid authentication response.");
+        throw new Error("Respuesta de autenticación no válida.");
       }
 
       saveAuth(token, user);
@@ -53,17 +54,19 @@ export default function Login() {
 
     } catch (error) {
       if (error.response?.status === 401) {
-        setError("Incorrect email or password.");
+        setError("El correo electrónico o la contraseña no son correctos.");
       } else if (error.response?.status === 422) {
-        setError("Please check your email and password.");
+        setError("Verifica el correo electrónico y la contraseña.");
       } else if (error.response) {
         setError(
-          error.response.data?.message ||
-          "Unable to sign in. Please try again."
+          localizeUiMessage(
+            error.response.data?.message,
+            "No fue posible iniciar sesión. Inténtalo nuevamente."
+          )
         );
       } else {
         setError(
-          "Unable to connect to the server. Please check your connection."
+          "No fue posible conectar con el servidor. Revisa tu conexión."
         );
       }
     } finally {
@@ -72,7 +75,7 @@ export default function Login() {
   }
 
   function handlePasswordRecovery() {
-    setError("Password recovery is not available yet.");
+    setError("La recuperación de contraseña todavía no está disponible.");
   }
 
   return (
@@ -83,7 +86,7 @@ export default function Login() {
 
         <img
           src={wheelchair}
-          alt="Family supporting mobility and independence"
+          alt="Familia que promueve la movilidad y la independencia"
           className="login-background"
         />
 
@@ -91,13 +94,13 @@ export default function Login() {
 
         {/* Brand */}
         <div className="login-brand">
-          <img src={logo} alt="Mobility Aids logo" />
+          <img src={logo} alt="Logotipo de Mobility Aids" />
 
           <div>
             <h2>
               Mobility <strong>Aids</strong>
             </h2>
-            <span>TECHNICAL AIDS BANK</span>
+            <span>Technical Aids Bank for Mobility</span>
           </div>
         </div>
 
@@ -105,7 +108,7 @@ export default function Login() {
         <div className="login-message">
 
           <span className="login-eyebrow">
-            ACCESSIBILITY · INDEPENDENCE · WELL-BEING
+            ACCESIBILIDAD · INDEPENDENCIA · BIENESTAR
           </span>
 
           <div className="login-headline-wrapper">
@@ -113,19 +116,18 @@ export default function Login() {
             <span className="login-headline-accent"></span>
 
             <h1>
-              Empowering
+              Promovemos
               <br />
-              <span>Mobility,</span>
+              <span>la movilidad,</span>
               <br />
-              Changing Lives.
+              transformamos vidas.
             </h1>
 
           </div>
 
           <p>
-            Managing technical aids with care, efficiency
-            and a commitment to a more inclusive and
-            accessible future.
+            Gestionamos ayudas técnicas con compromiso y eficiencia
+            para contribuir a un futuro más inclusivo y accesible.
           </p>
 
         </div>
@@ -169,9 +171,9 @@ export default function Login() {
             </div>
 
             <span>
-              Access to
+              Acceso a
               <br />
-              Technical Aids
+              ayudas técnicas
             </span>
 
           </div>
@@ -185,9 +187,9 @@ export default function Login() {
             </div>
 
             <span>
-              Support and
+              Acompañamiento y
               <br />
-              Follow-up
+              seguimiento
             </span>
 
           </div>
@@ -201,9 +203,9 @@ export default function Login() {
             </div>
 
             <span>
-              Inclusion
+              Inclusión
               <br />
-              and Quality of Life
+              y calidad de vida
             </span>
 
           </div>
@@ -219,8 +221,11 @@ export default function Login() {
 
           {/* Mobile brand */}
           <div className="login-mobile-brand">
-            <img src={logo} alt="Mobility Aids logo" />
-            <strong>Mobility Aids</strong>
+            <img src={logo} alt="Logotipo de Mobility Aids" />
+            <div>
+              <strong>Mobility <span>Aids</span></strong>
+              <small>Technical Aids Bank for Mobility</small>
+            </div>
           </div>
 
           {/* Security emblem */}
@@ -232,14 +237,14 @@ export default function Login() {
           <div className="login-heading">
 
             <span className="login-welcome">
-              WELCOME BACK
+              BIENVENIDO DE NUEVO
             </span>
 
-            <h1>Access Your Account</h1>
+            <h1>Accede a tu cuenta</h1>
 
             <p>
-              Log in to the Mobility Aids administration panel
-              and manage the technical aids bank.
+              Ingresa al panel de administración de Mobility Aids
+              y gestiona el banco de ayudas técnicas.
             </p>
 
           </div>
@@ -251,7 +256,7 @@ export default function Login() {
           >
 
             <label htmlFor="email">
-              Email Address
+              Correo electrónico
             </label>
 
             <div className="login-input-wrapper">
@@ -261,7 +266,7 @@ export default function Login() {
               <input
                 id="email"
                 type="email"
-                placeholder="Enter your email address"
+                placeholder="Ingresa tu correo electrónico"
                 value={email}
                 onChange={(event) => {
                   setEmail(event.target.value);
@@ -274,7 +279,7 @@ export default function Login() {
             </div>
 
             <label htmlFor="password">
-              Password
+              Contraseña
             </label>
 
             <div className="login-input-wrapper">
@@ -284,7 +289,7 @@ export default function Login() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
+                placeholder="Ingresa tu contraseña"
                 value={password}
                 onChange={(event) => {
                   setPassword(event.target.value);
@@ -301,10 +306,10 @@ export default function Login() {
                   setShowPassword(previous => !previous)
                 }
                 aria-label={
-                  showPassword ? "Hide password" : "Show password"
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
                 }
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? "Ocultar" : "Mostrar"}
               </button>
 
             </div>
@@ -324,7 +329,7 @@ export default function Login() {
               disabled={loading}
             >
               <KeyRound size={19} />
-              <span>Recover Your Password</span>
+              <span>Recuperar contraseña</span>
               <ArrowRight size={19} />
             </button>
 
@@ -334,7 +339,7 @@ export default function Login() {
               className="login-submit"
               disabled={loading}
             >
-              {loading ? "Logging In..." : "Log In to the System"}
+              {loading ? "Iniciando sesión..." : "Iniciar sesión"}
               <ArrowRight size={20} />
             </button>
 
@@ -348,9 +353,9 @@ export default function Login() {
             <ShieldCheck size={31} />
 
             <span className="login-security-message">
-              Your information is protected with
+              Tu información está protegida con
               <br />
-              advanced security.
+              seguridad avanzada.
             </span>
 
             <span className="login-security-line"></span>

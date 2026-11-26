@@ -27,16 +27,20 @@ import {
 import logo from "../assets/icons/Icono.png";
 import { getUser, clearAuth } from "../services/auth";
 import api from "../services/api";
+import {
+  getUiErrorMessage,
+  localizeCategoryName,
+} from "../services/uiMessages";
 import "./AdminLayout.css";
 
 const navigationLinks = [
-  { to: "/", label: "Dashboard", icon: Home },
-  { to: "/technical-aids", label: "Technical Aids", icon: Accessibility },
-  { to: "/loans", label: "Loans", icon: CalendarDays },
-  { to: "/returns", label: "Returns", icon: RotateCcw },
-  { to: "/beneficiaries", label: "Beneficiaries", icon: Users },
-  { to: "/inventory", label: "Inventory", icon: Package },
-  { to: "/reports", label: "Reports", icon: ChartNoAxesColumn },
+  { to: "/", label: "Panel", icon: Home },
+  { to: "/technical-aids", label: "Ayudas técnicas", icon: Accessibility },
+  { to: "/loans", label: "Préstamos", icon: CalendarDays },
+  { to: "/returns", label: "Devoluciones", icon: RotateCcw },
+  { to: "/beneficiaries", label: "Beneficiarios", icon: Users },
+  { to: "/inventory", label: "Inventario", icon: Package },
+  { to: "/reports", label: "Informes", icon: ChartNoAxesColumn },
 ];
 
 function extractRows(payload) {
@@ -58,7 +62,7 @@ function buildNotifications(loans, technicalAids) {
       id: `maintenance-${maintenanceUnits}`,
       type: "maintenance",
       title: "Ayudas técnicas en mantenimiento",
-      detail: `${maintenanceUnits} unidad(es) requieren reparación o revisión.`,
+      detail: `${maintenanceUnits} ${maintenanceUnits === 1 ? "unidad requiere" : "unidades requieren"} reparación o revisión.`,
       path: "/inventory",
       count: maintenanceUnits,
       date: null,
@@ -114,7 +118,7 @@ function buildNotifications(loans, technicalAids) {
       id: `overdue-${overdueItems}`,
       type: "overdue",
       title: "Préstamos vencidos",
-      detail: `${overdueItems} elemento(s) superaron la fecha prevista de devolución.`,
+      detail: `${overdueItems} ${overdueItems === 1 ? "elemento superó" : "elementos superaron"} la fecha prevista de devolución.`,
       path: "/loans",
       count: overdueItems,
       date: null,
@@ -126,7 +130,7 @@ function buildNotifications(loans, technicalAids) {
       id: `pending-${pendingItems}`,
       type: "pending",
       title: "Préstamos pendientes",
-      detail: `${pendingItems} elemento(s) todavía están prestados.`,
+      detail: `${pendingItems} ${pendingItems === 1 ? "elemento continúa" : "elementos continúan"} prestados.`,
       path: "/loans",
       count: pendingItems,
       date: null,
@@ -138,7 +142,7 @@ function buildNotifications(loans, technicalAids) {
       id: `returns-${returnedItems}`,
       type: "returns",
       title: "Devoluciones registradas",
-      detail: `${returnedItems} elemento(s) figuran como devueltos en el historial.`,
+      detail: `${returnedItems} ${returnedItems === 1 ? "elemento figura" : "elementos figuran"} como devueltos en el historial.`,
       path: "/returns",
       count: returnedItems,
       date: null,
@@ -150,6 +154,10 @@ function buildNotifications(loans, technicalAids) {
 
 export default function AdminLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => window.matchMedia("(max-width: 850px)").matches
+  );
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [logoutError, setLogoutError] = useState("");
@@ -160,6 +168,8 @@ export default function AdminLayout() {
   const [searchError, setSearchError] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  const sidebarRef = useRef(null);
+  const menuToggleRef = useRef(null);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
@@ -177,8 +187,43 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const user = getUser();
-  const userName = user?.name || "Administrator";
+  const userName = user?.name || "Administrador";
   const userInitial = userName.charAt(0).toUpperCase();
+  const navigationExpanded = isMobileViewport ? mobileNavOpen : !sidebarCollapsed;
+
+  useEffect(() => {
+    function handleResize() {
+      const mobileViewport = window.matchMedia("(max-width: 850px)").matches;
+      setIsMobileViewport(mobileViewport);
+      if (!mobileViewport) setMobileNavOpen(false);
+    }
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return undefined;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") closeMobileNavigation(true);
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileNavOpen]);
+
+  function closeMobileNavigation(restoreFocus = false) {
+    if (window.matchMedia("(max-width: 850px)").matches) {
+      setMobileNavOpen(false);
+      if (restoreFocus) {
+        window.setTimeout(() => menuToggleRef.current?.focus(), 0);
+      }
+    }
+  }
 
   async function loadNotifications() {
     setNotificationsLoading(true);
@@ -197,7 +242,7 @@ export default function AdminLayout() {
       : [];
 
     if (loansResult.status === "rejected" && aidsResult.status === "rejected") {
-      setNotificationsError("No fue posible consultar las notificaciones. Verifica la conexión con el servidor.");
+      setNotificationsError("No fue posible cargar las notificaciones. Revisa tu conexión con el servidor.");
       setNotifications([]);
     } else {
       setNotifications(buildNotifications(loans, aids));
@@ -270,9 +315,9 @@ export default function AdminLayout() {
         extractRows(requests[0].value.data).forEach((person) => {
           results.push({
             id: `beneficiary-${person.id}`,
-            type: "Beneficiary",
-            title: person.full_name || "Beneficiary",
-            detail: person.identification_number || "Beneficiary record",
+            type: "Beneficiario",
+            title: person.full_name || "Beneficiario",
+            detail: person.identification_number || "Registro de beneficiario",
             path: "/beneficiaries",
             icon: Users,
           });
@@ -283,9 +328,9 @@ export default function AdminLayout() {
         extractRows(requests[1].value.data).forEach((aid) => {
           results.push({
             id: `aid-${aid.id}`,
-            type: "Technical Aid",
-            title: aid.name || aid.reference || "Technical Aid",
-            detail: `${aid.reference || "No reference"} · ${aid.category?.name || aid.category_name || "Uncategorized"}`,
+            type: "Ayuda técnica",
+            title: aid.name || aid.reference || "Ayuda técnica",
+            detail: `${aid.reference || "Sin referencia"} · ${localizeCategoryName(aid.category?.name || aid.category_name || "Uncategorized")}`,
             path: "/technical-aids",
             icon: Accessibility,
           });
@@ -314,9 +359,9 @@ export default function AdminLayout() {
           .forEach((loan) => {
             results.push({
               id: `loan-${loan.id}`,
-              type: "Loan",
-              title: loan.beneficiary_name || "Loan record",
-              detail: `PR-${String(loan.id).slice(0, 6).toUpperCase()} · ${(loan.items || []).map((item) => item.aid_reference).filter(Boolean).join(", ") || "Technical aid"}`,
+              type: "Préstamo",
+              title: loan.beneficiary_name || "Registro de préstamo",
+              detail: `PR-${String(loan.id).slice(0, 6).toUpperCase()} · ${(loan.items || []).map((item) => item.aid_reference).filter(Boolean).join(", ") || "Ayuda técnica"}`,
               path: "/loans",
               icon: CalendarDays,
             });
@@ -327,7 +372,7 @@ export default function AdminLayout() {
         setSearchResults(results.slice(0, 12));
         const allFailed = requests.every((request) => request.status === "rejected");
         if (allFailed) {
-          setSearchError("Could not search records. Check your connection and try again.");
+          setSearchError("No fue posible buscar registros. Revisa tu conexión e inténtalo nuevamente.");
         }
         setSearchLoading(false);
       }
@@ -394,8 +439,7 @@ export default function AdminLayout() {
       }
 
       setLogoutError(
-        error.response?.data?.message ||
-        "Unable to close the session. Please try again."
+        getUiErrorMessage(error, "No fue posible cerrar la sesión. Inténtalo nuevamente.")
       );
     } finally {
       setLogoutLoading(false);
@@ -403,25 +447,40 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
-      <aside className="sidebar">
+    <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""} ${mobileNavOpen ? "mobile-nav-open" : ""}`}>
+      {mobileNavOpen && (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          onClick={() => closeMobileNavigation(true)}
+          aria-label="Cerrar menú de navegación"
+          tabIndex={-1}
+        />
+      )}
+      <aside
+        className="sidebar"
+        id="admin-navigation"
+        ref={sidebarRef}
+        aria-hidden={isMobileViewport ? !mobileNavOpen : undefined}
+      >
         <div className="brand">
-          <img src={logo} alt="Mobility Aids Logo" className="brand-logo" />
+          <img src={logo} alt="Logotipo de Mobility Aids" className="brand-logo" />
           <div className="brand-information">
             <span>Mobility <strong>Aids</strong></span>
             <small>Technical Aids Bank<br />for Mobility</small>
           </div>
         </div>
 
-        <div className="sidebar-label">MAIN MENU</div>
+        <div className="sidebar-label">MENÚ PRINCIPAL</div>
 
-        <nav aria-label="Main navigation">
+        <nav aria-label="Navegación principal">
           {navigationLinks.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === "/"}
               title={label}
+              onClick={() => closeMobileNavigation(true)}
               className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
             >
               <Icon size={23} strokeWidth={1.9} />
@@ -434,17 +493,18 @@ export default function AdminLayout() {
 
         <NavLink
           to="/settings"
-          title="Settings"
+          title="Ajustes"
+          onClick={() => closeMobileNavigation(true)}
           className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
         >
           <Settings size={23} strokeWidth={1.9} />
-          <span>Settings</span>
+          <span>Ajustes</span>
         </NavLink>
 
         <div className="sidebar-decoration">
           <div className="sidebar-wave sidebar-wave-one"></div>
           <div className="sidebar-wave sidebar-wave-two"></div>
-          <p>Mobility,<br />independence and<br />quality of life</p>
+          <p>Movilidad,<br />independencia y<br />calidad de vida</p>
         </div>
       </aside>
 
@@ -453,11 +513,29 @@ export default function AdminLayout() {
           <button
             type="button"
             className="menu-toggle"
-            onClick={() => setSidebarCollapsed((previous) => !previous)}
-            aria-label="Toggle sidebar"
-            aria-expanded={!sidebarCollapsed}
+            ref={menuToggleRef}
+            onClick={() => {
+              if (isMobileViewport) {
+                setSidebarCollapsed(false);
+                if (mobileNavOpen) {
+                  closeMobileNavigation(true);
+                } else {
+                  setMobileNavOpen(true);
+                  window.requestAnimationFrame(() => {
+                    if (sidebarRef.current?.getAttribute("aria-hidden") === "false") {
+                      sidebarRef.current.querySelector("nav a")?.focus();
+                    }
+                  });
+                }
+              } else {
+                setSidebarCollapsed((previous) => !previous);
+              }
+            }}
+            aria-label={navigationExpanded ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
+            aria-controls="admin-navigation"
+            aria-expanded={navigationExpanded}
           >
-            <Menu size={25} />
+            {navigationExpanded && isMobileViewport ? <X size={25} /> : <Menu size={25} />}
           </button>
 
           <div className="global-search-container" ref={searchRef}>
@@ -472,8 +550,8 @@ export default function AdminLayout() {
                 }}
                 onFocus={() => setSearchOpen(true)}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Search technical aids, beneficiaries or loans..."
-                aria-label="Search the system"
+                placeholder="Buscar ayudas técnicas, beneficiarios o préstamos..."
+                aria-label="Buscar en el sistema"
                 aria-expanded={searchOpen}
                 aria-controls="global-search-results"
                 autoComplete="off"
@@ -487,7 +565,7 @@ export default function AdminLayout() {
                     setSearchResults([]);
                     setSearchOpen(true);
                   }}
-                  aria-label="Clear search"
+                  aria-label="Borrar búsqueda"
                 >
                   <X size={16} />
                 </button>
@@ -499,17 +577,17 @@ export default function AdminLayout() {
                 {searchLoading ? (
                   <div className="global-search-message">
                     <LoaderCircle size={17} className="global-search-spinner" />
-                    Searching records...
+                    Buscando registros...
                   </div>
                 ) : searchError ? (
                   <div className="global-search-message global-search-error">{searchError}</div>
                 ) : searchResults.length === 0 ? (
                   <div className="global-search-message">
-                    No records found for “{globalSearch.trim()}”.
+                    No se encontraron registros para “{globalSearch.trim()}”.
                   </div>
                 ) : (
                   <>
-                    <div className="global-search-heading">SEARCH RESULTS</div>
+                    <div className="global-search-heading">RESULTADOS DE BÚSQUEDA</div>
                     {searchResults.map((result) => {
                       const ResultIcon = result.icon;
                       return (
@@ -529,7 +607,7 @@ export default function AdminLayout() {
                       );
                     })}
                     <div className="global-search-footer">
-                      Select a result to open its section.
+                      Selecciona un resultado para abrir su sección.
                     </div>
                   </>
                 )}
@@ -558,14 +636,13 @@ export default function AdminLayout() {
               </button>
 
               {notificationsOpen && (
-                <section className="notifications-panel" id="notifications-panel" aria-label="Centro de notificaciones">
+                <section className="notifications-panel" id="notifications-panel" aria-label="Notificaciones">
                   <div className="notifications-panel-header">
                     <div>
-                      <span className="notifications-eyebrow">MOBILITY AIDS</span>
+                      <span className="notifications-eyebrow">Mobility Aids</span>
                       <h2>Notificaciones</h2>
                       <p>
-                        {notifications.filter((notification) => !readNotificationIds.includes(notification.id)).length}
-                        {" "}pendiente(s) de revisar
+                        Elementos pendientes por revisar: {notifications.filter((notification) => !readNotificationIds.includes(notification.id)).length}
                       </p>
                     </div>
                     <button
@@ -605,7 +682,7 @@ export default function AdminLayout() {
                     <div className="notifications-empty">
                       <span className="notifications-empty-icon"><Bell size={23} /></span>
                       <strong>Todo está al día</strong>
-                      <p>No hay alertas pendientes en los préstamos ni en el inventario.</p>
+                      <p>No hay alertas pendientes de préstamos o inventario.</p>
                     </div>
                   ) : (
                     <div className="notifications-list">
@@ -634,7 +711,7 @@ export default function AdminLayout() {
                               <small>{notification.detail}</small>
                               <em>Ver sección <span aria-hidden="true">→</span></em>
                             </span>
-                            {!isRead && <span className="notification-unread-dot" aria-label="No leída"></span>}
+                            {!isRead && <span className="notification-unread-dot" aria-label="Notificación sin leer"></span>}
                           </button>
                         );
                       })}
@@ -642,7 +719,7 @@ export default function AdminLayout() {
                   )}
 
                   <div className="notifications-panel-footer">
-                    La información se consulta desde el sistema Mobility Aids.
+                    La información proviene del sistema Mobility Aids.
                   </div>
                 </section>
               )}
@@ -654,7 +731,7 @@ export default function AdminLayout() {
                 className="user-profile profile-trigger"
                 onClick={() => setProfileMenuOpen((previous) => !previous)}
                 aria-expanded={profileMenuOpen}
-                aria-label="Open administrator menu"
+                aria-label="Abrir menú de administración"
               >
                 <div className="avatar">{userInitial}</div>
                 <div className="user-information">
@@ -671,7 +748,7 @@ export default function AdminLayout() {
                 <div className="profile-dropdown">
                   <div className="profile-dropdown-heading">
                     <strong>{userName}</strong>
-                    <small>Administrator account</small>
+                    <small>Mi cuenta</small>
                   </div>
                   <div className="profile-dropdown-divider"></div>
                   <button
@@ -681,7 +758,7 @@ export default function AdminLayout() {
                     disabled={logoutLoading}
                   >
                     <LogOut size={18} />
-                    <span>{logoutLoading ? "Signing out..." : "Sign Out"}</span>
+                    <span>{logoutLoading ? "Cerrando sesión..." : "Cerrar sesión"}</span>
                   </button>
                   {logoutError && (
                     <p className="profile-logout-error" role="alert">{logoutError}</p>

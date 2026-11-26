@@ -15,15 +15,16 @@ import {
 } from "lucide-react";
 
 import api from "../../services/api";
+import { getUiErrorMessage, localizeCategoryName } from "../../services/uiMessages";
 import mobilityBanner from "../../assets/images/Mobility Aids.png";
 import "./List.css";
 
 const PAGE_SIZE = 10;
 
 const STATUS = {
-  returned: "Returned",
-  active: "Pending",
-  overdue: "Overdue",
+  returned: "Devuelta",
+  active: "Pendiente",
+  overdue: "Vencida",
 };
 
 function dateLabel(value) {
@@ -33,7 +34,7 @@ function dateLabel(value) {
 
   return Number.isNaN(date.getTime())
     ? "—"
-    : new Intl.DateTimeFormat("en-US", {
+    : new Intl.DateTimeFormat("es-CO", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -41,19 +42,14 @@ function dateLabel(value) {
 }
 
 function returnConditionLabel(item) {
-  if (!item?.returned_at) return "Pending";
-  if (item.return_condition === "maintenance") return "Maintenance";
-  if (item.return_condition === "available") return "Available";
-  return "Not recorded";
+  if (!item?.returned_at) return "Pendiente";
+  if (item.return_condition === "maintenance") return "Requiere mantenimiento";
+  if (item.return_condition === "available") return "Disponible";
+  return "No registrado";
 }
 
 function errorText(error) {
-  const validation = error?.response?.data?.errors;
-
-  return validation
-    ? Object.values(validation).flat().join(" ")
-    : error?.response?.data?.message ||
-        "The operation could not be completed.";
+  return getUiErrorMessage(error);
 }
 
 function flattenLoanItems(loans) {
@@ -62,7 +58,7 @@ function flattenLoanItems(loans) {
       ...item,
       loan_id: loan.id,
       loan_code: `PR-${String(loan.id).slice(0, 6).toUpperCase()}`,
-      beneficiary_name: loan.beneficiary_name || "Beneficiary",
+      beneficiary_name: loan.beneficiary_name || "Beneficiario",
       loaned_at: loan.loaned_at,
       loan_status: loan.status,
     }))
@@ -219,7 +215,7 @@ export default function Page() {
 
       setMessage({
         type: "success",
-        text: "Return registered successfully.",
+        text: "La devolución se registró correctamente.",
       });
 
       await loadReturns();
@@ -238,14 +234,14 @@ export default function Page() {
   function exportCsv() {
     const rows = [
       [
-        "Loan Code",
-        "Beneficiary",
-        "Technical Aid",
-        "Loan Date",
-        "Due Date",
-        "Return Date",
-        "Return Condition",
-        "Status",
+        "Código del préstamo",
+        "Beneficiario",
+        "Ayuda técnica",
+        "Fecha del préstamo",
+        "Fecha de vencimiento",
+        "Fecha de devolución",
+        "Estado de la ayuda",
+        "Estado",
       ],
 
       ...filteredReturns.map((item) => [
@@ -257,10 +253,10 @@ export default function Page() {
         dateLabel(item.returned_at),
         returnConditionLabel(item),
         item.returned_at
-          ? "Returned"
+          ? "Devuelta"
           : item.loan_status === "overdue"
-            ? "Overdue"
-            : "Pending",
+            ? "Vencida"
+            : "Pendiente",
       ]),
     ];
 
@@ -286,7 +282,7 @@ export default function Page() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "mobility-aids-return-history.csv";
+    link.download = "historial-devoluciones-mobility-aids.csv";
     link.click();
 
     URL.revokeObjectURL(url);
@@ -310,15 +306,15 @@ export default function Page() {
 
             <div>
               <span className="returns-eyebrow">
-                MOBILITY AIDS · OPERATIONS
+                Mobility Aids · Operaciones
               </span>
 
-              <h2>Returns</h2>
+              <h2>Devoluciones</h2>
 
               <p>
-                Management of technical aid returns
+                Gestión de devoluciones de ayudas técnicas
                 <br />
-                and equipment availability.
+                y disponibilidad de equipos.
               </p>
 
               <span className="returns-hero-underline" />
@@ -346,7 +342,7 @@ export default function Page() {
 
             <button
               onClick={() => setMessage({ type: "", text: "" })}
-              aria-label="Close"
+              aria-label="Cerrar"
             >
               <X size={16} />
             </button>
@@ -362,7 +358,7 @@ export default function Page() {
 
             <div>
               <strong>{metrics.registered}</strong>
-              <p>Loaned Items</p>
+              <p>Elementos prestados</p>
             </div>
           </article>
 
@@ -373,7 +369,7 @@ export default function Page() {
 
             <div>
               <strong>{metrics.returned}</strong>
-              <p>Returned Items</p>
+              <p>Elementos devueltos</p>
             </div>
           </article>
 
@@ -384,7 +380,7 @@ export default function Page() {
 
             <div>
               <strong>{metrics.pending}</strong>
-              <p>Pending Returns</p>
+              <p>Devoluciones pendientes</p>
             </div>
           </article>
 
@@ -395,7 +391,7 @@ export default function Page() {
 
             <div>
               <strong>{metrics.overdue}</strong>
-              <p>Overdue Items</p>
+              <p>Elementos vencidos</p>
             </div>
           </article>
         </section>
@@ -407,7 +403,7 @@ export default function Page() {
               <span>
                 <RotateCcw size={19} />
               </span>
-              Return History
+              Historial de devoluciones
             </h3>
           </div>
 
@@ -419,7 +415,7 @@ export default function Page() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by beneficiary, technical aid, or code..."
+                placeholder="Buscar por beneficiario, ayuda técnica o código..."
               />
             </label>
 
@@ -427,12 +423,12 @@ export default function Page() {
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
-                aria-label="Filter returns"
+                aria-label="Filtrar devoluciones"
               >
-                <option value="all">All statuses</option>
-                <option value="returned">Returned</option>
-                <option value="active">Pending</option>
-                <option value="overdue">Overdue</option>
+                <option value="all">Todos los estados</option>
+                <option value="returned">Devueltas</option>
+                <option value="active">Pendientes</option>
+                <option value="overdue">Vencidas</option>
               </select>
 
               <button
@@ -440,7 +436,7 @@ export default function Page() {
                 onClick={exportCsv}
               >
                 <Download size={16} />
-                Export
+                Exportar
               </button>
 
               <button
@@ -452,7 +448,7 @@ export default function Page() {
                   size={16}
                   className={loading ? "returns-spinning" : ""}
                 />
-                Refresh
+                Actualizar
               </button>
             </div>
           </div>
@@ -464,14 +460,14 @@ export default function Page() {
                 className="returns-spinning"
                 size={24}
               />
-              Loading returns...
+              Cargando devoluciones...
             </div>
           ) : visibleReturns.length === 0 ? (
             <div className="returns-empty">
               <RotateCcw size={30} />
-              <strong>No return records to display</strong>
+              <strong>No hay devoluciones para mostrar</strong>
               <span>
-                Loaned technical aids will appear here.
+                Las ayudas técnicas prestadas aparecerán aquí.
               </span>
             </div>
           ) : (
@@ -479,15 +475,15 @@ export default function Page() {
               <table className="returns-table">
                 <thead>
                   <tr>
-                    <th>Loan Code</th>
-                    <th>Beneficiary</th>
-                    <th>Technical Aid</th>
-                    <th>Loan Date</th>
-                    <th>Due Date</th>
-                    <th>Return Date</th>
-                    <th>Return Condition</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>Código del préstamo</th>
+                    <th>Beneficiario</th>
+                    <th>Ayuda técnica</th>
+                    <th>Fecha del préstamo</th>
+                    <th>Fecha de vencimiento</th>
+                    <th>Fecha de devolución</th>
+                    <th>Estado de la ayuda</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
 
@@ -524,7 +520,7 @@ export default function Page() {
                             </span>
 
                             <span>
-                              {item.aid_reference || "Technical Aid"}
+                              {item.aid_reference || "Ayuda técnica"}
                             </span>
                           </div>
                         </td>
@@ -582,8 +578,8 @@ export default function Page() {
                         <td>
                           <div className="returns-row-actions">
                             <button
-                              title="View return details"
-                              aria-label="View return details"
+                              title="Ver detalles de la devolución"
+                              aria-label="Ver detalles de la devolución"
                               onClick={() => setSelectedReturn(item)}
                             >
                               <Eye size={17} />
@@ -592,7 +588,7 @@ export default function Page() {
                             {!item.returned_at ? (
                               <button
                                 className="returns-register-button"
-                                title="Register return"
+                                title="Registrar devolución"
                                 onClick={() => registerReturn(item)}
                                 disabled={returning === String(item.id)}
                               >
@@ -616,8 +612,8 @@ export default function Page() {
           {/* PAGINATION */}
           <div className="returns-pagination">
             <span>
-              Showing {visibleReturns.length} of {filteredReturns.length} records
-              · Page {page} of {totalPages}
+              Mostrando {visibleReturns.length} de {filteredReturns.length} registros
+              · Página {page} de {totalPages}
             </span>
 
             <div>
@@ -626,7 +622,7 @@ export default function Page() {
                   setPage((value) => Math.max(1, value - 1))
                 }
                 disabled={page <= 1 || loading}
-                aria-label="Previous"
+                aria-label="Anterior"
               >
                 <ArrowLeft size={16} />
               </button>
@@ -636,7 +632,7 @@ export default function Page() {
                   setPage((value) => Math.min(totalPages, value + 1))
                 }
                 disabled={page >= totalPages || loading}
-                aria-label="Next"
+                aria-label="Siguiente"
               >
                 <ArrowRight size={16} />
               </button>
@@ -647,7 +643,7 @@ export default function Page() {
         {/* API INFORMATION */}
         <div className="returns-api-note">
           <AlertCircle size={17} />
-          Return information is connected to the Laravel API through loan records.
+          La información de devoluciones se obtiene de los registros de préstamos mediante la API de Laravel.
         </div>
       </main>
 
@@ -670,22 +666,22 @@ export default function Page() {
             <header className="returns-modal-header">
               <div>
                 <span className="returns-eyebrow">
-                  RETURN INFORMATION
+                  INFORMACIÓN DE LA DEVOLUCIÓN
                 </span>
 
                 <h2 id="return-details-title">
-                  Return Details
+                  Detalles de la devolución
                 </h2>
 
                 <p>
-                  Complete information about this technical aid.
+                  Información completa de esta ayuda técnica.
                 </p>
               </div>
 
               <button
                 className="returns-modal-close"
                 onClick={() => setSelectedReturn(null)}
-                aria-label="Close details"
+                aria-label="Cerrar detalles"
               >
                 <X size={20} />
               </button>
@@ -693,55 +689,55 @@ export default function Page() {
 
             <div className="returns-details-summary">
               <div>
-                <span>Loan code</span>
+                <span>Código del préstamo</span>
                 <strong>{selectedReturn.loan_code}</strong>
               </div>
 
               <div>
-                <span>Beneficiary</span>
+                <span>Beneficiario</span>
                 <strong>{selectedReturn.beneficiary_name}</strong>
               </div>
 
               <div>
-                <span>Technical aid</span>
+                <span>Ayuda técnica</span>
                 <strong>{selectedReturn.aid_reference || "—"}</strong>
               </div>
 
               <div>
-                <span>Category</span>
+                <span>Categoría</span>
                 <strong>
-                  {selectedReturn.category_name || "Uncategorized"}
+                  {localizeCategoryName(selectedReturn.category_name || "Uncategorized")}
                 </strong>
               </div>
 
               <div>
-                <span>Loan date</span>
+                <span>Fecha del préstamo</span>
                 <strong>{dateLabel(selectedReturn.loaned_at)}</strong>
               </div>
 
               <div>
-                <span>Due date</span>
+                <span>Fecha de vencimiento</span>
                 <strong>{dateLabel(selectedReturn.due_at)}</strong>
               </div>
 
               <div>
-                <span>Return date</span>
+                <span>Fecha de devolución</span>
                 <strong>{dateLabel(selectedReturn.returned_at)}</strong>
               </div>
 
               <div>
-                <span>Return condition</span>
+                <span>Estado de la ayuda</span>
                 <strong>{returnConditionLabel(selectedReturn)}</strong>
               </div>
 
               <div>
-                <span>Return status</span>
+                <span>Estado de la devolución</span>
                 <strong>
                   {selectedReturn.returned_at
-                    ? "Returned"
+                    ? "Devuelta"
                     : selectedReturn.loan_status === "overdue"
-                      ? "Overdue"
-                      : "Pending"}
+                      ? "Vencida"
+                      : "Pendiente"}
                 </strong>
               </div>
             </div>
@@ -754,8 +750,8 @@ export default function Page() {
                   disabled={returning === String(selectedReturn.id)}
                 >
                   {returning === String(selectedReturn.id)
-                    ? "Registering..."
-                    : "Register Return"}
+                    ? "Registrando..."
+                    : "Registrar devolución"}
                 </button>
               )}
 
@@ -764,7 +760,7 @@ export default function Page() {
                 className="returns-secondary-button"
                 onClick={() => setSelectedReturn(null)}
               >
-                Close
+                Cerrar
               </button>
             </footer>
           </section>
@@ -795,7 +791,7 @@ export default function Page() {
             </div>
 
             <span className="returns-confirm-eyebrow">
-              MOBILITY AIDS · DEVOLUCIONES
+              Mobility Aids · Devoluciones
             </span>
 
             <h2 id="returns-confirm-title">
@@ -803,8 +799,8 @@ export default function Page() {
             </h2>
 
             <p className="returns-confirm-description">
-              ¿Desea registrar la devolución de esta ayuda técnica?
-              Verifique la información antes de continuar.
+              ¿Deseas registrar la devolución de esta ayuda técnica?
+              Revisa la información antes de continuar.
             </p>
 
             <div
@@ -836,11 +832,11 @@ export default function Page() {
                   fontSize: "14px",
                 }}
               >
-                <option value="available">Available — vuelve al inventario</option>
-                <option value="maintenance">Maintenance — requiere reparación</option>
+                <option value="available">Disponible — volver al inventario</option>
+                <option value="maintenance">Requiere mantenimiento — necesita reparación</option>
               </select>
               <span style={{ color: "#718096", fontSize: "12px", lineHeight: 1.5 }}>
-                Si seleccionas Maintenance, la unidad quedará pendiente de reparación
+                Si seleccionas mantenimiento, la unidad requerirá reparación
                 y no estará disponible para nuevos préstamos.
               </span>
             </div>

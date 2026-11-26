@@ -16,6 +16,7 @@ import {
 
 import api from "../../services/api";
 import { getUser } from "../../services/auth";
+import { getUiErrorMessage, localizeCategoryName } from "../../services/uiMessages";
 import "./List.css";
 
 // TECHNICAL AID PHOTOGRAPHS
@@ -23,7 +24,7 @@ import wheelchairImage from "../../assets/images/1. Wheelchair (silla de ruedas)
 import walkerImage from "../../assets/images/2. Walker (caminador).jpg";
 import crutchesImage from "../../assets/images/3. Crutches (muletas).jpg";
 import walkingCaneImage from "../../assets/images/4. Walking Cane (bastón).jpg";
-import showerChairImage from "../../assets/images/5. Shower Chair (silla de baño).jpg";
+import cushionsImage from "../../assets/images/cushions.jpg";
 import inventoryBanner from "../../assets/images/inventory-banner.png";
 
 // MATCH API RECORDS WITH LOCAL PHOTOGRAPHS
@@ -45,9 +46,9 @@ const aidImages = [
     image: walkingCaneImage
   },
   {
-    terms: ["shower chair", "silla de bano"],
-    image: showerChairImage
-  }
+    terms: ["cushion", "cojin"],
+    image: cushionsImage
+  },
 ];
 
 function getCollection(payload) {
@@ -146,10 +147,9 @@ async function fetchAllPages(endpoint) {
 function getAidName(aid) {
   return (
     aid.name ||
-    aid.category_name ||
-    aid.category?.name ||
+    localizeCategoryName(aid.category_name || aid.category?.name) ||
     aid.reference ||
-    "Technical Aid"
+    "Ayuda técnica"
   );
 }
 
@@ -219,7 +219,7 @@ function countAidLoans(aid, outstandingItems) {
 }
 
 const numberFormat = (value) =>
-  Number(value || 0).toLocaleString("en-US");
+  Number(value || 0).toLocaleString("es-CO");
 
 export default function Inventory() {
   const [technicalAids, setTechnicalAids] = useState([]);
@@ -267,14 +267,14 @@ export default function Inventory() {
       } else {
         setLoans([]);
         setError(
-          "Inventory loaded, but loan information could not be retrieved."
+          "El inventario se cargó, pero no fue posible obtener la información de los préstamos."
         );
       }
     } catch (err) {
       console.error("Inventory loading error:", err);
 
       setError(
-        "Unable to load inventory. Please check the Laravel API connection."
+        "No fue posible cargar el inventario. Verifica la conexión con la API de Laravel."
       );
     } finally {
       setLoading(false);
@@ -350,14 +350,11 @@ export default function Inventory() {
       );
 
       setMaintenanceAid(null);
-      setNotice("El mantenimiento se completó correctamente. La unidad vuelve a estar disponible.");
+      setNotice("El mantenimiento finalizó correctamente. La unidad vuelve a estar disponible.");
       await loadInventory(true);
     } catch (err) {
       console.error("Maintenance completion error:", err);
-      setError(
-        err?.response?.data?.message ||
-          "No fue posible completar el mantenimiento. Inténtalo nuevamente."
-      );
+      setError(getUiErrorMessage(err, "No fue posible finalizar el mantenimiento. Inténtalo nuevamente."));
     } finally {
       setCompletingMaintenance("");
     }
@@ -402,7 +399,7 @@ export default function Inventory() {
 
         <img
           src={inventoryBanner}
-          alt="Mobility Aids inventory showroom"
+          alt="Inventario de ayudas técnicas Mobility Aids"
           className="inventory-hero-image"
         />
 
@@ -415,16 +412,16 @@ export default function Inventory() {
 
             <div className="inventory-hero-text">
               <span className="inventory-eyebrow">
-                MOBILITY AIDS · INVENTORY
+                Mobility Aids · Inventario
               </span>
 
               <h1>
-                Technical Aid <span>Inventory</span>
+                Inventario de <span>ayudas técnicas</span>
               </h1>
 
               <p>
-                Manage, organize and monitor mobility aids,
-                stock levels and availability.
+                Administra y supervisa las ayudas técnicas,
+                las existencias y su disponibilidad.
               </p>
 
               <div className="inventory-hero-accent" />
@@ -443,7 +440,7 @@ export default function Inventory() {
             size={17}
             className={refreshing ? "inventory-spinning" : ""}
           />
-          {refreshing ? "Refreshing..." : "Refresh data"}
+          {refreshing ? "Actualizando..." : "Actualizar datos"}
         </button>
 
       </section>
@@ -485,8 +482,8 @@ export default function Inventory() {
             <strong>
               {loading ? "—" : numberFormat(stats.totalAids)}
             </strong>
-            <span>Registered Technical Aids</span>
-            <small>Different aid records</small>
+            <span>Ayudas técnicas registradas</span>
+            <small>Registros de ayudas</small>
           </div>
         </article>
 
@@ -499,8 +496,8 @@ export default function Inventory() {
             <strong>
               {loading ? "—" : numberFormat(stats.availableUnits)}
             </strong>
-            <span>Available Units</span>
-            <small>Currently available</small>
+            <span>Unidades disponibles</span>
+            <small>Disponibles actualmente</small>
           </div>
         </article>
 
@@ -515,8 +512,8 @@ export default function Inventory() {
                 ? (loading ? "—" : numberFormat(0))
                 : numberFormat(stats.onLoanUnits)}
             </strong>
-            <span>Units on Loan</span>
-            <small>Outstanding loan items</small>
+            <span>Unidades prestadas</span>
+            <small>Elementos pendientes de devolución</small>
           </div>
         </article>
 
@@ -529,8 +526,8 @@ export default function Inventory() {
             <strong>
               {loading ? "—" : numberFormat(stats.maintenanceUnits)}
             </strong>
-            <span>Under Maintenance</span>
-            <small>Maintenance tracking</small>
+            <span>En mantenimiento</span>
+            <small>Seguimiento de mantenimiento</small>
           </div>
         </article>
 
@@ -542,13 +539,13 @@ export default function Inventory() {
         <div className="inventory-panel-header">
           <div className="inventory-panel-title">
             <Package size={23} />
-            <h2>Inventory List</h2>
+            <h2>Lista de inventario</h2>
           </div>
 
           <span className="inventory-record-count">
             {loading
-              ? "Loading records..."
-              : `${filteredItems.length} records`}
+              ? "Cargando registros..."
+              : `${filteredItems.length} registros`}
           </span>
         </div>
 
@@ -560,8 +557,8 @@ export default function Inventory() {
 
             <input
               type="search"
-              placeholder="Search by name or reference..."
-              aria-label="Search technical aids"
+              placeholder="Buscar por nombre o referencia..."
+              aria-label="Buscar ayudas técnicas"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
             />
@@ -570,7 +567,7 @@ export default function Inventory() {
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                aria-label="Clear search"
+                aria-label="Borrar búsqueda"
               >
                 ×
               </button>
@@ -585,13 +582,13 @@ export default function Inventory() {
               onChange={(event) =>
                 setSelectedCategory(event.target.value)
               }
-              aria-label="Filter by category"
+              aria-label="Filtrar por categoría"
             >
-              <option value="all">All categories</option>
+              <option value="all">Todas las categorías</option>
 
               {categories.map((category) => (
                 <option key={category} value={category}>
-                  {category}
+                  {localizeCategoryName(category)}
                 </option>
               ))}
             </select>
@@ -605,14 +602,14 @@ export default function Inventory() {
           <table className="inventory-table">
             <thead>
               <tr>
-                <th>TECHNICAL AID</th>
-                <th>CATEGORY</th>
-                <th>TOTAL UNITS</th>
-                <th>AVAILABLE</th>
-                <th>ON LOAN</th>
-                <th>MAINTENANCE</th>
-                <th>AVAILABILITY</th>
-                {isAdmin && <th>ACTIONS</th>}
+                <th>AYUDA TÉCNICA</th>
+                <th>CATEGORÍA</th>
+                <th>UNIDADES TOTALES</th>
+                <th>DISPONIBLES</th>
+                <th>PRESTADAS</th>
+                <th>MANTENIMIENTO</th>
+                <th>DISPONIBILIDAD</th>
+                {isAdmin && <th>ACCIONES</th>}
               </tr>
             </thead>
 
@@ -625,16 +622,16 @@ export default function Inventory() {
                       size={22}
                       className="inventory-spinning"
                     />
-                    <span>Loading inventory records...</span>
+                    <span>Cargando registros del inventario...</span>
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 8 : 7} className="inventory-empty">
                     <Boxes size={27} />
-                    <strong>No technical aids found</strong>
+                    <strong>No se encontraron ayudas técnicas</strong>
                     <span>
-                      Try another search or category.
+                      Prueba con otra búsqueda o categoría.
                     </span>
                   </td>
                 </tr>
@@ -672,7 +669,7 @@ export default function Inventory() {
 
                       <td>
                         <span className="inventory-category">
-                          {getAidCategory(aid)}
+                          {localizeCategoryName(getAidCategory(aid))}
                         </span>
                       </td>
 
@@ -717,7 +714,7 @@ export default function Inventory() {
                           }`}
                         >
                           <CheckCircle2 size={14} />
-                          {available > 0 ? "Available" : "Unavailable"}
+                          {available > 0 ? "Disponible" : "No disponible"}
                         </span>
                       </td>
 
@@ -728,7 +725,7 @@ export default function Inventory() {
                               type="button"
                               onClick={() => completeMaintenance(aid)}
                               disabled={completingMaintenance === String(aid.id)}
-                              title="Mark maintenance as completed"
+                              title="Marcar el mantenimiento como finalizado"
                               style={{
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -750,8 +747,8 @@ export default function Inventory() {
                             >
                               <Wrench size={14} />
                               {completingMaintenance === String(aid.id)
-                                ? "Processing..."
-                                : "Complete Maintenance"}
+                                ? "Procesando..."
+                                : "Finalizar mantenimiento"}
                             </button>
                           ) : (
                             <span style={{ color: "#94a3b8" }}>—</span>
@@ -771,11 +768,11 @@ export default function Inventory() {
         {/* TABLE FOOTER */}
         <footer className="inventory-table-footer">
           <span>
-            Showing {filteredItems.length} of {technicalAids.length} technical aids
+            Mostrando {filteredItems.length} de {technicalAids.length} ayudas técnicas
           </span>
 
           <span>
-            {loading ? "Synchronizing..." : "Inventory synchronized from Laravel"}
+            {loading ? "Sincronizando..." : "Inventario sincronizado con Laravel"}
           </span>
         </footer>
 
@@ -828,7 +825,7 @@ export default function Inventory() {
               type="button"
               onClick={() => setMaintenanceAid(null)}
               disabled={Boolean(completingMaintenance)}
-              aria-label="Cerrar ventana"
+              aria-label="Cerrar diálogo"
               style={{
                 position: "absolute",
                 top: "22px",
@@ -876,7 +873,7 @@ export default function Inventory() {
                     letterSpacing: "1.55px"
                   }}
                 >
-                  MOBILITY AIDS · GESTIÓN DE INVENTARIO
+                  Mobility Aids · Gestión de inventario
                 </div>
                 <h2
                   id="maintenance-dialog-title"
@@ -900,8 +897,8 @@ export default function Inventory() {
                     lineHeight: 1.65
                   }}
                 >
-                  ¿Confirmas que la reparación de esta ayuda técnica ha finalizado
-                  y que está lista para volver a utilizarse?
+                  Confirma que las reparaciones de esta ayuda técnica finalizaron
+                  y que está lista para volver a estar disponible.
                 </p>
               </div>
 

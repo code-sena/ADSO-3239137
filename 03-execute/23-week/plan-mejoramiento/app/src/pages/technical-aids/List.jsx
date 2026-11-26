@@ -41,9 +41,12 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import api from "../../services/api";
-
 import { getUser } from "../../services/auth";
-
+import {
+  getUiErrorMessage,
+  localizeCategoryName,
+  localizeUiMessage,
+} from "../../services/uiMessages";
 import mobilityBanner from "../../assets/images/Mobility Aids.png";
 
 import mobilityLogo from "../../assets/icons/Icono.png";
@@ -166,7 +169,7 @@ export default function TechnicalAids() {
 
     } catch {
 
-      setError("Unable to load technical aid categories.");
+      setError("No fue posible cargar las categorías de ayudas técnicas.");
 
     }
 
@@ -260,7 +263,7 @@ export default function TechnicalAids() {
 
       setMetrics({ registered: 0, available: 0, onLoan: 0, maintenance: 0 });
 
-      setError("Unable to load inventory metrics. Please refresh the page.");
+      setError("No fue posible cargar los indicadores del inventario. Actualiza la página.");
 
     } finally {
 
@@ -324,13 +327,7 @@ export default function TechnicalAids() {
 
     } catch (err) {
 
-      setError(
-
-        err.response?.data?.message ||
-
-        "Unable to load technical aids. Please try again."
-
-      );
+      setError(getUiErrorMessage(err, "No fue posible cargar las ayudas técnicas. Inténtalo nuevamente."));
 
     } finally {
 
@@ -432,7 +429,7 @@ export default function TechnicalAids() {
 
     if (!file.type.startsWith("image/")) {
 
-      setError("Please select a valid image.");
+      setError("Selecciona una imagen válida.");
 
       event.target.value = "";
 
@@ -442,7 +439,7 @@ export default function TechnicalAids() {
 
     if (file.size > 5 * 1024 * 1024) {
 
-      setError("The image must not exceed 5 MB.");
+      setError("La imagen no debe superar los 5 MB.");
 
       event.target.value = "";
 
@@ -510,7 +507,7 @@ export default function TechnicalAids() {
 
         );
 
-        setNotice("Technical aid updated successfully.");
+        setNotice("La ayuda técnica se actualizó correctamente.");
 
       } else {
 
@@ -532,7 +529,7 @@ export default function TechnicalAids() {
 
         );
 
-        setNotice("Technical aid registered successfully.");
+        setNotice("La ayuda técnica se registró correctamente.");
 
       }
 
@@ -555,13 +552,10 @@ export default function TechnicalAids() {
         : null;
 
       setError(
-
-        firstValidationError ||
-
-        err.response?.data?.message ||
-
-        "The operation could not be completed."
-
+        localizeUiMessage(
+          firstValidationError || err.response?.data?.message,
+          "No fue posible completar la operación."
+        )
       );
 
     } finally {
@@ -606,17 +600,16 @@ export default function TechnicalAids() {
 
       setDeactivationTarget(null);
 
-      setNotice(`La ayuda técnica "${deactivationTarget.name || deactivationTarget.reference}" fue desactivada correctamente.`);
+      setNotice(`La ayuda técnica "${deactivationTarget.name || deactivationTarget.reference}" se desactivó correctamente.`);
 
       await Promise.all([loadTechnicalAids(), loadDashboardMetrics()]);
 
     } catch (err) {
 
-      const message =
-
-        err.response?.data?.message ||
-
-        "No fue posible desactivar esta ayuda técnica. Verifica si tiene préstamos pendientes.";
+      const message = getUiErrorMessage(
+        err,
+        "No fue posible desactivar esta ayuda técnica. Verifica si tiene préstamos pendientes."
+      );
 
       setDeactivationTarget(null);
 
@@ -690,7 +683,7 @@ export default function TechnicalAids() {
 
       if (records.length === 0) {
 
-        setNotice("There are no records to export with the current filters.");
+        setNotice("No hay registros para exportar con los filtros actuales.");
 
         return;
 
@@ -702,27 +695,19 @@ export default function TechnicalAids() {
 
       workbook.created = new Date();
 
-      const worksheet = workbook.addWorksheet("Technical Aids");
+      const worksheet = workbook.addWorksheet("Ayudas técnicas");
 
       worksheet.columns = [
 
-        { header: "Technical Aid", key: "name", width: 30 },
-
-        { header: "Reference", key: "reference", width: 20 },
-
-        { header: "Category", key: "category", width: 22 },
-
-        { header: "Description", key: "description", width: 48 },
-
-        { header: "Total Units", key: "total", width: 14 },
-
-        { header: "Available Units", key: "available", width: 17 },
-
-        { header: "Units on Loan", key: "onLoan", width: 15 },
-
-        { header: "Units in Maintenance", key: "maintenance", width: 20 },
-
-        { header: "Status", key: "status", width: 14 }
+        { header: "Ayuda técnica", key: "name", width: 30 },
+        { header: "Referencia", key: "reference", width: 20 },
+        { header: "Categoría", key: "category", width: 22 },
+        { header: "Descripción", key: "description", width: 48 },
+        { header: "Unidades totales", key: "total", width: 14 },
+        { header: "Unidades disponibles", key: "available", width: 17 },
+        { header: "Unidades prestadas", key: "onLoan", width: 15 },
+        { header: "Unidades en mantenimiento", key: "maintenance", width: 20 },
+        { header: "Estado", key: "status", width: 14 }
 
       ];
 
@@ -740,7 +725,7 @@ export default function TechnicalAids() {
 
           reference: item.reference || "",
 
-          category: item.category?.name || "Uncategorized",
+          category: localizeCategoryName(item.category?.name || "Uncategorized"),
 
           description: item.description || "",
 
@@ -752,7 +737,7 @@ export default function TechnicalAids() {
 
           maintenance: maintenanceUnits,
 
-          status: item.is_active === false ? "Inactive" : "Active"
+          status: item.is_active === false ? "Inactiva" : "Activa"
 
         });
 
@@ -806,7 +791,7 @@ export default function TechnicalAids() {
 
       link.href = url;
 
-      link.download = `mobility-aids-inventory-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.download = `inventario-mobility-aids-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
       document.body.appendChild(link);
 
@@ -816,17 +801,11 @@ export default function TechnicalAids() {
 
       URL.revokeObjectURL(url);
 
-      setNotice(`Excel report exported successfully (${records.length} records).`);
+      setNotice(`Informe de Excel exportado correctamente (${records.length} registros).`);
 
     } catch (err) {
 
-      setError(
-
-        err.response?.data?.message ||
-
-        "Unable to export the Excel report. Please try again."
-
-      );
+      setError(getUiErrorMessage(err, "No fue posible exportar el informe de Excel. Inténtalo nuevamente."));
 
     } finally {
 
@@ -850,7 +829,7 @@ export default function TechnicalAids() {
 
       if (records.length === 0) {
 
-        setNotice("There are no records to export with the current filters.");
+        setNotice("No hay registros para exportar con los filtros actuales.");
 
         return;
 
@@ -858,7 +837,7 @@ export default function TechnicalAids() {
 
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
-      const generatedAt = new Date().toLocaleString();
+      const generatedAt = new Date().toLocaleString("es-CO");
 
       const availableTotal = records.reduce(
 
@@ -908,13 +887,13 @@ export default function TechnicalAids() {
 
       doc.setTextColor(226, 232, 240);
 
-      doc.text("TECHNICAL AIDS INVENTORY REPORT", 52, 25);
+      doc.text("INFORME DE INVENTARIO DE AYUDAS TÉCNICAS", 52, 25);
 
       doc.setFontSize(8);
 
       doc.setTextColor(255, 193, 7);
 
-      doc.text(`Generated: ${generatedAt}`, 52, 33);
+      doc.text(`Generado: ${generatedAt}`, 52, 33);
 
       // Inventory summary cards.
 
@@ -930,13 +909,13 @@ export default function TechnicalAids() {
 
       const summaryCards = [
 
-        { label: "REGISTERED RECORDS", value: String(records.length) },
+        { label: "REGISTROS", value: String(records.length) },
 
-        { label: "TOTAL UNITS", value: String(unitsTotal) },
+        { label: "UNIDADES TOTALES", value: String(unitsTotal) },
 
-        { label: "AVAILABLE UNITS", value: String(availableTotal) },
+        { label: "UNIDADES DISPONIBLES", value: String(availableTotal) },
 
-        { label: "UNDER MAINTENANCE", value: String(maintenanceTotal) }
+        { label: "EN MANTENIMIENTO", value: String(maintenanceTotal) }
 
       ];
 
@@ -982,9 +961,8 @@ export default function TechnicalAids() {
 
         const filterText = [
 
-          search ? `Search: ${search}` : "",
-
-          selectedCategory ? `Category: ${selectedCategory}` : ""
+          search ? `Búsqueda: ${search}` : "",
+          selectedCategory ? `Categoría: ${localizeCategoryName(selectedCategory)}` : ""
 
         ].filter(Boolean).join("   |   ");
 
@@ -994,7 +972,7 @@ export default function TechnicalAids() {
 
         doc.setTextColor(75, 85, 99);
 
-        doc.text(`Applied filters: ${filterText}`, 14, 76);
+        doc.text(`Filtros aplicados: ${filterText}`, 14, 76);
 
         tableStartY = 82;
 
@@ -1006,23 +984,17 @@ export default function TechnicalAids() {
 
         head: [[
 
-          "Technical Aid",
-
-          "Reference",
-
-          "Category",
-
-          "Description",
+          "Ayuda técnica",
+          "Referencia",
+          "Categoría",
+          "Descripción",
 
           "Total",
 
-          "Available",
-
-          "On Loan",
-
-          "Maintenance",
-
-          "Status"
+          "Disponible",
+          "Prestadas",
+          "Mantenimiento",
+          "Estado"
 
         ]],
 
@@ -1040,7 +1012,7 @@ export default function TechnicalAids() {
 
             item.reference || "",
 
-            item.category?.name || "Uncategorized",
+            localizeCategoryName(item.category?.name || "Uncategorized"),
 
             item.description || "—",
 
@@ -1052,7 +1024,7 @@ export default function TechnicalAids() {
 
             String(maintenanceUnits),
 
-            item.is_active === false ? "Inactive" : "Active"
+            item.is_active === false ? "Inactiva" : "Activa"
 
           ];
 
@@ -1110,7 +1082,7 @@ export default function TechnicalAids() {
 
           doc.text(
 
-            `Mobility Aids  •  Page ${pageCount}`,
+            `Mobility Aids  •  Página ${pageCount}`,
 
             doc.internal.pageSize.getWidth() - 14,
 
@@ -1124,19 +1096,12 @@ export default function TechnicalAids() {
 
       });
 
-      doc.save(`mobility-aids-inventory-${new Date().toISOString().slice(0, 10)}.pdf`);
-
-      setNotice(`PDF report exported successfully (${records.length} records).`);
+      doc.save(`inventario-mobility-aids-${new Date().toISOString().slice(0, 10)}.pdf`);
+      setNotice(`Informe PDF exportado correctamente (${records.length} registros).`);
 
     } catch (err) {
 
-      setError(
-
-        err.response?.data?.message ||
-
-        "Unable to export the PDF report. Please try again."
-
-      );
+      setError(getUiErrorMessage(err, "No fue posible exportar el informe en PDF. Inténtalo nuevamente."));
 
     } finally {
 
@@ -1158,7 +1123,7 @@ export default function TechnicalAids() {
 
           src={mobilityBanner}
 
-          alt="Mobility Aids technical mobility equipment"
+          alt="Ayudas técnicas para la movilidad de Mobility Aids"
 
         />
 
@@ -1172,19 +1137,18 @@ export default function TechnicalAids() {
 
           <div className="technical-aid-hero-copy">
 
-            <span>TECHNICAL AIDS BANK FOR MOBILITY</span>
+            <span>BANCO DE AYUDAS TÉCNICAS PARA LA MOVILIDAD</span>
 
             <h1>
 
-              Technical <strong>Aids</strong>
+              Ayudas <strong>técnicas</strong>
 
             </h1>
 
             <p>
 
-              Manage the catalog of mobility aids, their information,
-
-              condition and availability.
+              Administra el catálogo de ayudas para la movilidad, su información,
+              estado y disponibilidad.
 
             </p>
 
@@ -1202,15 +1166,15 @@ export default function TechnicalAids() {
 
           <span className="technical-aid-eyebrow">
 
-            MANAGEMENT SYSTEM
+            SISTEMA DE GESTIÓN
 
           </span>
 
-          <h2>Technical Aids Management</h2>
+          <h2>Gestión de ayudas técnicas</h2>
 
           <p>
 
-            Register, organize and monitor technical aid availability.
+            Registra, organiza y supervisa la disponibilidad de ayudas técnicas.
 
           </p>
 
@@ -1228,7 +1192,7 @@ export default function TechnicalAids() {
 
             <Plus size={18} />
 
-            Register Technical Aid
+            Registrar ayuda técnica
 
           </button>
 
@@ -1250,7 +1214,7 @@ export default function TechnicalAids() {
 
             <strong>{metricsLoading ? "—" : metrics.registered}</strong>
 
-            <span>Registered aids</span>
+            <span>Ayudas registradas</span>
 
           </div>
 
@@ -1268,9 +1232,8 @@ export default function TechnicalAids() {
 
             <strong>{metricsLoading ? "—" : metrics.available}</strong>
 
-            <span>Available units</span>
-
-            <small>Current inventory availability</small>
+            <span>Unidades disponibles</span>
+            <small>Disponibilidad actual del inventario</small>
 
           </div>
 
@@ -1288,9 +1251,8 @@ export default function TechnicalAids() {
 
             <strong>{metricsLoading ? "—" : metrics.onLoan}</strong>
 
-            <span>Units on loan</span>
-
-            <small>Units currently not available</small>
+            <span>Unidades prestadas</span>
+            <small>Unidades que no están disponibles</small>
 
           </div>
 
@@ -1308,9 +1270,8 @@ export default function TechnicalAids() {
 
             <strong>{metricsLoading ? "—" : metrics.maintenance}</strong>
 
-            <span>Under maintenance</span>
-
-            <small>Units currently being repaired</small>
+            <span>En mantenimiento</span>
+            <small>Unidades que están en reparación</small>
 
           </div>
 
@@ -1328,7 +1289,7 @@ export default function TechnicalAids() {
 
             onClick={() => setNotice("")}
 
-            aria-label="Dismiss message"
+            aria-label="Cerrar mensaje"
 
           >
 
@@ -1352,7 +1313,7 @@ export default function TechnicalAids() {
 
             onClick={() => setError("")}
 
-            aria-label="Dismiss error"
+            aria-label="Cerrar error"
 
           >
 
@@ -1372,11 +1333,11 @@ export default function TechnicalAids() {
 
             <Accessibility size={25} />
 
-            <h2>Technical Aids List</h2>
+            <h2>Lista de ayudas técnicas</h2>
 
           </div>
 
-          <span>{total} records</span>
+          <span>{total} registros</span>
 
         </div>
 
@@ -1390,7 +1351,7 @@ export default function TechnicalAids() {
 
               type="search"
 
-              placeholder="Search by name or reference..."
+              placeholder="Buscar por nombre o referencia..."
 
               value={search}
 
@@ -1402,7 +1363,7 @@ export default function TechnicalAids() {
 
               }}
 
-              aria-label="Search by name or reference"
+              aria-label="Buscar por nombre o referencia"
 
             />
 
@@ -1424,17 +1385,17 @@ export default function TechnicalAids() {
 
               }}
 
-              aria-label="Filter by category"
+              aria-label="Filtrar por categoría"
 
             >
 
-              <option value="">All categories</option>
+              <option value="">Todas las categorías</option>
 
               {categories.map((category) => (
 
                 <option key={category.id} value={category.id}>
 
-                  {category.name}
+                  {localizeCategoryName(category.name)}
 
                 </option>
 
@@ -1454,9 +1415,8 @@ export default function TechnicalAids() {
 
             disabled={exporting || loading || total === 0}
 
-            title="Export all filtered records to Excel"
-
-            aria-label="Export to Excel"
+            title="Exportar a Excel todos los registros filtrados"
+            aria-label="Exportar a Excel"
 
             style={{
 
@@ -1518,9 +1478,8 @@ export default function TechnicalAids() {
 
             disabled={exporting || loading || total === 0}
 
-            title="Export all filtered records to PDF"
-
-            aria-label="Export to PDF"
+            title="Exportar a PDF todos los registros filtrados"
+            aria-label="Exportar a PDF"
 
             style={{
 
@@ -1586,7 +1545,7 @@ export default function TechnicalAids() {
 
             disabled={loading || metricsLoading}
 
-            title="Refresh list"
+            title="Actualizar lista"
 
           >
 
@@ -1604,19 +1563,13 @@ export default function TechnicalAids() {
 
               <tr>
 
-                <th style={{ minWidth: "390px", textAlign: "left" }}>Technical Aid / Code / Description</th>
-
-                <th>Category</th>
-
-                <th>Total Units</th>
-
-                <th>Available</th>
-
-                <th>On Loan</th>
-
-                <th>Maintenance</th>
-
-                {isAdmin && <th>Actions</th>}
+                <th style={{ minWidth: "390px", textAlign: "left" }}>Ayuda técnica / Código / Descripción</th>
+                <th>Categoría</th>
+                <th>Unidades totales</th>
+                <th>Disponibles</th>
+                <th>Prestadas</th>
+                <th>Mantenimiento</th>
+                {isAdmin && <th>Acciones</th>}
 
               </tr>
 
@@ -1636,7 +1589,7 @@ export default function TechnicalAids() {
 
                   >
 
-                    Loading technical aids...
+                    Cargando ayudas técnicas...
 
                   </td>
 
@@ -1654,7 +1607,7 @@ export default function TechnicalAids() {
 
                   >
 
-                    No technical aids found.
+                    No se encontraron ayudas técnicas.
 
                   </td>
 
@@ -1736,7 +1689,7 @@ export default function TechnicalAids() {
                 </span>
 
                 <span style={{ color: "#71819a", fontSize: "12px", lineHeight: 1.5, whiteSpace: "normal", overflowWrap: "anywhere", maxWidth: "430px" }}>
-                  {item.description?.trim() || "Sin descripción registrada."}
+                  {item.description?.trim() || "No hay una descripción registrada."}
                 </span>
               </div>
             </div>
@@ -1745,7 +1698,7 @@ export default function TechnicalAids() {
 
                       <td>
 
-                        {item.category?.name ?? "Uncategorized"}
+                        {localizeCategoryName(item.category?.name ?? "Uncategorized")}
 
                       </td>
 
@@ -1777,9 +1730,9 @@ export default function TechnicalAids() {
 
                               onClick={() => openEditModal(item)}
 
-                              title="Edit technical aid"
+                              title="Editar ayuda técnica"
 
-                              aria-label={`Edit ${item.reference}`}
+                              aria-label={`Editar ${item.reference}`}
 
                             >
 
@@ -1793,9 +1746,9 @@ export default function TechnicalAids() {
 
                               onClick={() => handleDeactivate(item)}
 
-                              title="Deactivate technical aid"
+                              title="Desactivar ayuda técnica"
 
-                              aria-label={`Deactivate ${item.reference}`}
+                              aria-label={`Desactivar ${item.reference}`}
 
                             >
 
@@ -1827,7 +1780,7 @@ export default function TechnicalAids() {
 
           <span>
 
-            Page {page} of {totalPages} · {total} records
+            Página {page} de {totalPages} · {total} registros
 
           </span>
 
@@ -1843,7 +1796,7 @@ export default function TechnicalAids() {
 
               disabled={page <= 1 || loading}
 
-              aria-label="Previous page"
+              aria-label="Página anterior"
 
             >
 
@@ -1865,7 +1818,7 @@ export default function TechnicalAids() {
 
               disabled={page >= totalPages || loading}
 
-              aria-label="Next page"
+              aria-label="Página siguiente"
 
             >
 
@@ -2033,7 +1986,7 @@ export default function TechnicalAids() {
 
             }}>
 
-              MOBILITY AIDS · GESTIÓN DE INVENTARIO
+              Mobility Aids · Gestión de inventario
 
             </span>
 
@@ -2153,7 +2106,7 @@ export default function TechnicalAids() {
 
               <AlertCircle size={19} style={{ flexShrink: 0, marginTop: "1px" }} />
 
-              <span>La ayuda técnica se conservará en el sistema, pero dejará de estar activa para nuevos préstamos. Si tiene préstamos pendientes, el sistema impedirá la desactivación.</span>
+              <span>La ayuda técnica permanecerá en el sistema, pero no estará activa para nuevos préstamos. El sistema impedirá desactivarla si tiene préstamos pendientes.</span>
 
             </div>
 
@@ -2261,15 +2214,14 @@ export default function TechnicalAids() {
 
               <div>
 
-                <span>TECHNICAL AIDS</span>
+                <span>AYUDAS TÉCNICAS</span>
 
                 <h2 id="technical-aid-modal-title">
 
                   {editingId
 
-                    ? "Edit Technical Aid"
-
-                    : "Register Technical Aid"}
+                    ? "Editar ayuda técnica"
+                    : "Registrar ayuda técnica"}
 
                 </h2>
 
@@ -2281,7 +2233,7 @@ export default function TechnicalAids() {
 
                 disabled={saving}
 
-                aria-label="Close dialog"
+                aria-label="Cerrar diálogo"
 
               >
 
@@ -2307,7 +2259,7 @@ export default function TechnicalAids() {
 
               <div className="form-group">
 
-                <label htmlFor="aid-name">Technical Aid Name</label>
+                <label htmlFor="aid-name">Nombre de la ayuda técnica</label>
 
                 <input
 
@@ -2317,7 +2269,7 @@ export default function TechnicalAids() {
 
                   type="text"
 
-                  placeholder="Example: Standard Wheelchair"
+                  placeholder="Ejemplo: silla de ruedas estándar"
 
                   maxLength={255}
 
@@ -2343,7 +2295,7 @@ export default function TechnicalAids() {
 
               <div className="form-group">
 
-                <label htmlFor="aid-category">Category</label>
+                <label htmlFor="aid-category">Categoría</label>
 
                 <select
 
@@ -2369,13 +2321,13 @@ export default function TechnicalAids() {
 
                 >
 
-                  <option value="">Select a category</option>
+                  <option value="">Selecciona una categoría</option>
 
                   {categories.map((category) => (
 
                     <option key={category.id} value={category.id}>
 
-                      {category.name}
+                      {localizeCategoryName(category.name)}
 
                     </option>
 
@@ -2387,7 +2339,7 @@ export default function TechnicalAids() {
 
               <div className="form-group">
 
-                <label htmlFor="aid-reference">Reference</label>
+                <label htmlFor="aid-reference">Referencia</label>
 
                 <input
 
@@ -2397,7 +2349,7 @@ export default function TechnicalAids() {
 
                   type="text"
 
-                  placeholder="Example: WHEEL-001"
+                  placeholder="Ejemplo: SILLA-001"
 
                   maxLength={255}
 
@@ -2423,7 +2375,7 @@ export default function TechnicalAids() {
 
               <div className="form-group">
 
-                <label htmlFor="aid-description">Description</label>
+                <label htmlFor="aid-description">Descripción</label>
 
                 <textarea
 
@@ -2431,7 +2383,7 @@ export default function TechnicalAids() {
 
                   className="form-control"
 
-                  placeholder="Describe the technical aid..."
+                  placeholder="Describe la ayuda técnica..."
 
                   rows={3}
 
@@ -2457,7 +2409,7 @@ export default function TechnicalAids() {
 
               <div className="form-group">
 
-                <label htmlFor="aid-image">Photograph</label>
+                <label htmlFor="aid-image">Fotografía</label>
 
                 <label
 
@@ -2491,7 +2443,7 @@ export default function TechnicalAids() {
 
                       ? selectedImage.name
 
-                      : "Choose an image (maximum 5 MB)"}
+                      : "Selecciona una imagen (máximo 5 MB)"}
 
                   </span>
 
@@ -2519,7 +2471,7 @@ export default function TechnicalAids() {
 
                       src={imagePreview}
 
-                      alt="Technical aid preview"
+                      alt="Vista previa de la ayuda técnica"
 
                       style={{
 
@@ -2545,7 +2497,7 @@ export default function TechnicalAids() {
 
               <div className="form-group">
 
-                <label htmlFor="aid-quantity">Total Units</label>
+                <label htmlFor="aid-quantity">Unidades totales</label>
 
                 <input
 
@@ -2593,7 +2545,7 @@ export default function TechnicalAids() {
 
                 >
 
-                  Cancel
+                  Cancelar
 
                 </button>
 
@@ -2619,13 +2571,10 @@ export default function TechnicalAids() {
 
                   {saving
 
-                    ? "Saving..."
-
+                    ? "Guardando..."
                     : editingId
-
-                      ? "Save Changes"
-
-                      : "Register Aid"}
+                      ? "Guardar cambios"
+                      : "Registrar ayuda"}
 
                 </button>
 

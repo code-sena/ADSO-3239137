@@ -113,7 +113,7 @@
 .login-brand span {
   display: block;
   margin-top: 5px;
-  color: #f4bd55;
+  color: #f5f7fa;
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 2.5px;
@@ -328,8 +328,11 @@
   display: none;
   align-items: center;
   gap: 12px;
+  padding: 10px 12px;
   margin-bottom: 30px;
-  color: #07182b;
+  border-radius: 12px;
+  background: #07182b;
+  color: #ffffff;
   font-size: 20px;
 }
 
@@ -337,6 +340,22 @@
   width: 48px;
   height: 48px;
   object-fit: contain;
+}
+
+.login-mobile-brand > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.login-mobile-brand > div strong span {
+  color: #b7832e;
+}
+
+.login-mobile-brand small {
+  color: #f5f7fa;
+  font-size: 10px;
+  font-weight: 600;
 }
 
 /* =========================================

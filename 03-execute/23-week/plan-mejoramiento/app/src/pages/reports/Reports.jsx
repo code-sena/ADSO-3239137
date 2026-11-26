@@ -20,6 +20,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import api from "../../services/api";
+import { getUiErrorMessage } from "../../services/uiMessages";
 import reportsBanner from "../../assets/images/reports-banner.png";
 import "./Reports.css";
 
@@ -27,38 +28,38 @@ const reportCategories = [
   {
     id: "loans",
     number: "01",
-    title: "Loan Reports",
-    description: "Review registered loans, active equipment and overdue items.",
+    title: "Informes de préstamos",
+    description: "Consulta los préstamos registrados, las ayudas activas y los elementos vencidos.",
     icon: CalendarDays,
     color: "blue",
-    status: "Loan management"
+    status: "Gestión de préstamos"
   },
   {
     id: "returns",
     number: "02",
-    title: "Return Reports",
-    description: "Analyze returned technical aids and return history.",
+    title: "Informes de devoluciones",
+    description: "Analiza las ayudas técnicas devueltas y el historial de devoluciones.",
     icon: RotateCcw,
     color: "orange",
-    status: "Return management"
+    status: "Gestión de devoluciones"
   },
   {
     id: "beneficiaries",
     number: "03",
-    title: "Beneficiary Reports",
-    description: "Review beneficiary records and their loan activity.",
+    title: "Informes de beneficiarios",
+    description: "Consulta los registros de beneficiarios y su actividad de préstamos.",
     icon: Users,
     color: "green",
-    status: "People management"
+    status: "Gestión de personas"
   },
   {
     id: "inventory",
     number: "04",
-    title: "Inventory Reports",
-    description: "Monitor registered aids and available units.",
+    title: "Informes de inventario",
+    description: "Supervisa las ayudas registradas y las unidades disponibles.",
     icon: Package,
     color: "purple",
-    status: "Inventory management"
+    status: "Gestión de inventario"
   }
 ];
 
@@ -75,29 +76,29 @@ const initialSummary = {
 const reportDefinitions = [
   {
     key: "loans_count",
-    label: "Loan Reports",
-    description: "Registered loan records",
+    label: "Informes de préstamos",
+    description: "Préstamos registrados",
     icon: CalendarDays,
     color: "blue"
   },
   {
     key: "returns_count",
-    label: "Return Reports",
-    description: "Processed returns",
+    label: "Informes de devoluciones",
+    description: "Devoluciones procesadas",
     icon: RotateCcw,
     color: "orange"
   },
   {
     key: "beneficiaries_count",
-    label: "Beneficiary Reports",
-    description: "Registered beneficiaries",
+    label: "Informes de beneficiarios",
+    description: "Beneficiarios registrados",
     icon: Users,
     color: "green"
   },
   {
     key: "technical_aids_count",
-    label: "Inventory Reports",
-    description: "Active technical aid records",
+    label: "Informes de inventario",
+    description: "Registros activos de ayudas técnicas",
     icon: Package,
     color: "purple"
   }
@@ -105,18 +106,18 @@ const reportDefinitions = [
 
 function getReportRows(summary) {
   return [
-    ["Registered loans", summary.loans_count],
-    ["Processed returns", summary.returns_count],
-    ["Registered beneficiaries", summary.beneficiaries_count],
-    ["Active technical aids", summary.technical_aids_count],
-    ["Total inventory units", summary.total_units],
-    ["Available units", summary.available_units],
-    ["Units currently borrowed", summary.borrowed_units]
+    ["Préstamos registrados", summary.loans_count],
+    ["Devoluciones procesadas", summary.returns_count],
+    ["Beneficiarios registrados", summary.beneficiaries_count],
+    ["Ayudas técnicas activas", summary.technical_aids_count],
+    ["Unidades totales en inventario", summary.total_units],
+    ["Unidades disponibles", summary.available_units],
+    ["Unidades actualmente prestadas", summary.borrowed_units]
   ];
 }
 
 function getDateLabel() {
-  return new Date().toLocaleDateString("en-GB");
+  return new Date().toLocaleDateString("es-CO");
 }
 
 export default function Reports() {
@@ -137,10 +138,7 @@ export default function Reports() {
       });
     } catch (err) {
       console.error("Error loading report summary:", err);
-      setError(
-        err.response?.data?.message ||
-        "Unable to load report information. Please try again."
-      );
+      setError(getUiErrorMessage(err, "No fue posible cargar la información de los informes. Inténtalo nuevamente."));
     } finally {
       setLoading(false);
     }
@@ -158,11 +156,11 @@ export default function Reports() {
       workbook.creator = "Mobility Aids";
       workbook.created = new Date();
 
-      const worksheet = workbook.addWorksheet("Management Report");
+      const worksheet = workbook.addWorksheet("Informe de gestión");
 
       worksheet.columns = [
-        { header: "Indicator", key: "indicator", width: 34 },
-        { header: "Value", key: "value", width: 18 }
+        { header: "Indicador", key: "indicator", width: 34 },
+        { header: "Valor", key: "value", width: 18 }
       ];
 
       worksheet.addRows(
@@ -172,7 +170,7 @@ export default function Reports() {
         }))
       );
 
-      worksheet.insertRow(1, ["MOBILITY AIDS - MANAGEMENT REPORT"]);
+      worksheet.insertRow(1, ["MOBILITY AIDS - INFORME DE GESTIÓN"]);
       worksheet.mergeCells("A1:B1");
 
       worksheet.getRow(1).font = {
@@ -205,7 +203,7 @@ export default function Reports() {
       };
 
       worksheet.addRow([]);
-      worksheet.addRow(["Generated on", getDateLabel()]);
+      worksheet.addRow(["Generado el", getDateLabel()]);
 
       const buffer = await workbook.xlsx.writeBuffer();
 
@@ -213,10 +211,10 @@ export default function Reports() {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       });
 
-      saveAs(blob, `mobility-aids-report-${Date.now()}.xlsx`);
+      saveAs(blob, `informe-mobility-aids-${Date.now()}.xlsx`);
     } catch (err) {
       console.error("Excel export error:", err);
-      window.alert("The Excel report could not be generated.");
+      window.alert("No fue posible generar el informe de Excel.");
     } finally {
       setExporting("");
     }
@@ -236,15 +234,15 @@ export default function Reports() {
       doc.text("MOBILITY AIDS", 14, 17);
 
       doc.setFontSize(11);
-      doc.text("Management & Analytics Report", 14, 27);
+      doc.text("Informe de gestión y análisis", 14, 27);
 
       doc.setTextColor(70, 70, 70);
       doc.setFontSize(10);
-      doc.text(`Generated on: ${getDateLabel()}`, 14, 48);
+      doc.text(`Generado el: ${getDateLabel()}`, 14, 48);
 
       autoTable(doc, {
         startY: 57,
-        head: [["Indicator", "Value"]],
+        head: [["Indicador", "Valor"]],
         body: getReportRows(summary),
         theme: "grid",
         headStyles: {
@@ -264,15 +262,15 @@ export default function Reports() {
       doc.setFontSize(9);
       doc.setTextColor(120, 120, 120);
       doc.text(
-        "Mobility Aids - Technical Aids Bank for Mobility",
+        "Mobility Aids - Banco de ayudas técnicas para la movilidad",
         14,
         285
       );
 
-      doc.save(`mobility-aids-report-${Date.now()}.pdf`);
+      doc.save(`informe-mobility-aids-${Date.now()}.pdf`);
     } catch (err) {
       console.error("PDF export error:", err);
-      window.alert("The PDF report could not be generated.");
+      window.alert("No fue posible generar el informe en PDF.");
     } finally {
       setExporting("");
     }
@@ -291,15 +289,15 @@ export default function Reports() {
           </div>
 
           <div className="reports-hero-copy">
-            <span>MANAGEMENT INSIGHTS</span>
+            <span>GESTIÓN Y ANÁLISIS</span>
 
             <h2>
-              Reports & <strong>Analytics</strong>
+              Informes y <strong>análisis</strong>
             </h2>
 
             <p>
-              Analyze loans, returns, beneficiaries and
-              technical aid inventory in one place.
+              Consulta los préstamos, las devoluciones, los beneficiarios
+              y el inventario de ayudas técnicas en un solo lugar.
             </p>
 
             <div className="reports-hero-line"></div>
@@ -338,7 +336,7 @@ export default function Reports() {
           <span></span>
           {error}
           <button type="button" onClick={loadSummary}>
-            <RefreshCw size={15} /> Retry
+            <RefreshCw size={15} /> Reintentar
           </button>
         </div>
       )}
@@ -348,16 +346,16 @@ export default function Reports() {
           <div>
             <h2>
               <FileBarChart size={23} />
-              Report Categories
+              Categorías de informes
             </h2>
 
             <p>
-              Explore the different reporting areas of Mobility Aids.
+              Explora las distintas áreas de informes de Mobility Aids.
             </p>
           </div>
 
           <span className="reports-section-label">
-            04 CATEGORIES
+            04 CATEGORÍAS
           </span>
         </div>
 
@@ -400,9 +398,9 @@ export default function Reports() {
           </div>
 
           <div>
-            <h2>Report Generation</h2>
+            <h2>Generación de informes</h2>
             <p>
-              Prepare and export management summary reports.
+              Prepara y exporta informes resumidos de gestión.
             </p>
           </div>
         </div>
@@ -412,10 +410,10 @@ export default function Reports() {
             <ShieldCheck size={21} />
 
             <div>
-              <strong>Centralized reporting</strong>
+              <strong>Informes centralizados</strong>
               <p>
-                Report figures are retrieved directly from the
-                Mobility Aids database.
+                Los datos de los informes se obtienen directamente del
+                sistema Mobility Aids.
               </p>
             </div>
           </div>
@@ -431,9 +429,9 @@ export default function Reports() {
 
               <div>
                 <strong>
-                  {exporting === "excel" ? "Generating..." : "Excel"}
+                  {exporting === "excel" ? "Generando..." : "Excel"}
                 </strong>
-                <small>Download .xlsx spreadsheet</small>
+                <small>Descargar hoja de cálculo .xlsx</small>
               </div>
 
               <Download size={17} />
@@ -449,9 +447,9 @@ export default function Reports() {
 
               <div>
                 <strong>
-                  {exporting === "pdf" ? "Generating..." : "PDF"}
+                  {exporting === "pdf" ? "Generando..." : "PDF"}
                 </strong>
-                <small>Download PDF document</small>
+                <small>Descargar documento PDF</small>
               </div>
 
               <Download size={17} />
@@ -462,16 +460,16 @@ export default function Reports() {
         <div className="reports-api-notice">
           <span></span>
           {loading
-            ? "Loading report information..."
+            ? "Cargando información de los informes..."
             : error
-              ? "Report information could not be synchronized."
-              : "Report information successfully synchronized with the API."}
+              ? "No se pudo sincronizar la información de los informes."
+              : "La información de los informes se sincronizó correctamente con la API."}
         </div>
       </section>
 
       <footer className="reports-footer">
-        <span>Mobility Aids · Management & Analytics</span>
-        <span>Technical Aids Bank for Mobility</span>
+        <span>Mobility Aids · Gestión y análisis</span>
+        <span>Banco de ayudas técnicas para la movilidad</span>
       </footer>
 
     </div>

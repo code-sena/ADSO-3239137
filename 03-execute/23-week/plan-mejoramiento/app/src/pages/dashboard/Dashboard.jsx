@@ -3,6 +3,7 @@
 import { Link } from "react-router-dom";
 
 import api from "../../services/api";
+import { localizeCategoryName } from "../../services/uiMessages";
 
 import "./Dashboard.css";
 
@@ -48,7 +49,8 @@ import crutchesImage from "../../assets/images/3. Crutches (muletas).jpg";
 
 import walkingCaneImage from "../../assets/images/4. Walking Cane (bastón).jpg";
 
-import showerChairImage from "../../assets/images/5. Shower Chair (silla de baño).jpg";
+import cushionsImage from "../../assets/images/cushions.jpg";
+
 
 // LOCAL PHOTOGRAPHS MATCHED TO API TECHNICAL-AID RECORDS
 
@@ -62,27 +64,18 @@ const aidImageByName = [
 
   { match: ["walking cane", "cane", "baston"], image: walkingCaneImage },
 
-  { match: ["shower chair", "silla de bano"], image: showerChairImage }
+  { match: ["cushion", "cojin"], image: cushionsImage },
 
 ];
 
 
 function getAidDisplayName(aid) {
-
   return (
-
     aid.name ||
-
-    aid.category_name ||
-
-    aid.category?.name ||
-
+    localizeCategoryName(aid.category_name || aid.category?.name) ||
     aid.reference ||
-
-    "Technical Aid"
-
+    "Ayuda técnica"
   );
-
 }
 
 
@@ -462,13 +455,13 @@ function getRecentActivityEvents(loans) {
 
         date: new Date(loanDate),
 
-        title: "Loan Registration",
+        title: "Registro de préstamo",
 
         description: references.length
 
           ? references.join(", ")
 
-          : `Loan ${String(loan.id || "").slice(0, 8)}`,
+          : `Préstamo ${String(loan.id || "").slice(0, 8)}`,
 
         icon: CalendarDays,
 
@@ -490,7 +483,7 @@ function getRecentActivityEvents(loans) {
 
         date: new Date(item.returned_at),
 
-        title: "Technical Aid Returned",
+        title: "Ayuda técnica devuelta",
 
         description:
 
@@ -498,7 +491,7 @@ function getRecentActivityEvents(loans) {
 
           item.technical_aid?.reference ||
 
-          "Return registered",
+          "Devolución registrada",
 
         icon: RotateCcw,
 
@@ -524,7 +517,7 @@ function getRecentActivityEvents(loans) {
 
       ...event,
 
-      description: `${event.description} · ${event.date.toLocaleDateString()}`
+      description: `${event.description} · ${event.date.toLocaleDateString("es-CO")}`
 
     }));
 
@@ -538,9 +531,8 @@ const systemFeatures = [
 
   {
 
-    title: "Secure Access",
-
-    description: "Role-based access control",
+    title: "Acceso seguro",
+    description: "Control de acceso según roles",
 
     icon: ShieldCheck
 
@@ -548,9 +540,8 @@ const systemFeatures = [
 
   {
 
-    title: "Loan Management",
-
-    description: "Registration and tracking",
+    title: "Gestión de préstamos",
+    description: "Registro y seguimiento",
 
     icon: CalendarDays
 
@@ -558,9 +549,8 @@ const systemFeatures = [
 
   {
 
-    title: "Inventory Control",
-
-    description: "Technical aid availability",
+    title: "Control de inventario",
+    description: "Disponibilidad de ayudas técnicas",
 
     icon: Package
 
@@ -568,9 +558,8 @@ const systemFeatures = [
 
   {
 
-    title: "Reports",
-
-    description: "Traceability and statistics",
+    title: "Informes",
+    description: "Trazabilidad y estadísticas",
 
     icon: ChartNoAxesColumn
 
@@ -634,7 +623,7 @@ export default function Dashboard() {
 
         ? aidsResult.value.items
 
-        : (failedSections.push("technical aids"), []);
+        : (failedSections.push("ayudas técnicas"), []);
 
 
 
@@ -644,7 +633,7 @@ export default function Dashboard() {
 
         ? loansResult.value.items
 
-        : (failedSections.push("loans"), []);
+        : (failedSections.push("préstamos"), []);
 
 
 
@@ -654,7 +643,7 @@ export default function Dashboard() {
 
         ? beneficiariesResult.value.total
 
-        : (failedSections.push("beneficiaries"), null);
+        : (failedSections.push("beneficiarios"), null);
 
 
 
@@ -674,7 +663,7 @@ export default function Dashboard() {
 
       setLoadError(
 
-        `Unable to load: ${failedSections.join(", ")}. Check the API connection and refresh.`
+        `No fue posible cargar: ${failedSections.join(", ")}. Revisa la conexión con la API y actualiza los datos.`
 
       );
 
@@ -924,7 +913,7 @@ export default function Dashboard() {
 
             src={heroImage}
 
-            alt="Mobility Aids - Technical aids bank"
+            alt="Mobility Aids: banco de ayudas técnicas"
 
             className="dashboard-hero-image"
 
@@ -938,7 +927,7 @@ export default function Dashboard() {
 
             <span className="eyebrow">
 
-              TECHNICAL AIDS BANK
+              BANCO DE AYUDAS TÉCNICAS
 
             </span>
 
@@ -946,7 +935,7 @@ export default function Dashboard() {
 
             <h2>
 
-              Welcome to
+              Te damos la bienvenida a
 
               <br />
 
@@ -958,9 +947,8 @@ export default function Dashboard() {
 
             <p>
 
-              Manage the technical aids bank for mobility,
-
-              improving beneficiaries' independence and quality of life.
+              Administra el banco de ayudas técnicas para la movilidad
+              y contribuye a la independencia y calidad de vida de sus beneficiarios.
 
             </p>
 
@@ -986,7 +974,7 @@ export default function Dashboard() {
 
             <Package size={21} />
 
-            <h2>Bank Overview</h2>
+            <h2>Resumen del banco</h2>
 
           </div>
 
@@ -1002,7 +990,7 @@ export default function Dashboard() {
 
                 <strong>{numberOrDash(inventoryStats.totalUnits)}</strong>
 
-                <span>Total Units</span>
+                <span>Unidades totales</span>
 
               </div>
 
@@ -1018,7 +1006,7 @@ export default function Dashboard() {
 
                 <span className="status-dot available"></span>
 
-                <span>Available</span>
+                <span>Disponibles</span>
 
                 <strong>{numberOrDash(inventoryStats.availableUnits)}</strong>
 
@@ -1030,7 +1018,7 @@ export default function Dashboard() {
 
                 <span className="status-dot loaned"></span>
 
-                <span>On Loan</span>
+                <span>Prestadas</span>
 
                 <strong>{numberOrDash(inventoryStats.onLoanUnits)}</strong>
 
@@ -1042,7 +1030,7 @@ export default function Dashboard() {
 
                 <span className="status-dot maintenance"></span>
 
-                <span>Under Maintenance</span>
+                <span>En mantenimiento</span>
 
                 <strong>{numberOrDash(inventoryStats.maintenanceUnits)}</strong>
 
@@ -1128,7 +1116,7 @@ export default function Dashboard() {
 
         >
 
-          {loading ? "Updating..." : "Refresh data"}
+          {loading ? "Actualizando..." : "Actualizar datos"}
 
         </button>
 
@@ -1154,7 +1142,7 @@ export default function Dashboard() {
 
             <strong>{numberOrDash(inventoryStats.registeredAids)}</strong>
 
-            <span>Technical Aids</span>
+            <span>Ayudas técnicas</span>
 
           </div>
 
@@ -1174,7 +1162,7 @@ export default function Dashboard() {
 
             <strong>{numberOrDash(inventoryStats.activeLoans)}</strong>
 
-            <span>Active Loans</span>
+            <span>Préstamos activos</span>
 
           </div>
 
@@ -1194,7 +1182,7 @@ export default function Dashboard() {
 
             <strong>{numberOrDash(inventoryStats.returnedItems)}</strong>
 
-            <span>Returns</span>
+            <span>Devoluciones</span>
 
           </div>
 
@@ -1214,7 +1202,7 @@ export default function Dashboard() {
 
             <strong>{numberOrDash(inventoryStats.beneficiaries)}</strong>
 
-            <span>Beneficiaries</span>
+            <span>Beneficiarios</span>
 
           </div>
 
@@ -1246,7 +1234,7 @@ export default function Dashboard() {
 
               <Star size={22} />
 
-              Featured Technical Aids
+              Ayudas técnicas destacadas
 
             </h2>
 
@@ -1255,9 +1243,9 @@ export default function Dashboard() {
             <Link
               to="/technical-aids"
               className="dashboard-action"
-              aria-label="View complete technical aids catalog"
+              aria-label="Ver el catálogo completo de ayudas técnicas"
             >
-              View Catalog <ArrowRight size={16} />
+              Ver catálogo <ArrowRight size={16} />
             </Link>
 
 
@@ -1282,7 +1270,7 @@ export default function Dashboard() {
 
               onClick={showPreviousAids}
 
-              aria-label="Previous technical aids"
+              aria-label="Ayudas técnicas anteriores"
 
             >
 
@@ -1304,9 +1292,8 @@ export default function Dashboard() {
 
                   {loading
 
-                    ? "Loading technical aids..."
-
-                    : "No technical aids are registered yet."}
+                    ? "Cargando ayudas técnicas..."
+                    : "Todavía no hay ayudas técnicas registradas."}
 
                 </p>
 
@@ -1372,7 +1359,7 @@ export default function Dashboard() {
 
                       <CircleCheck size={13} />
 
-                      Available: {numberOrDash(aid.available)}
+                      Disponibles: {numberOrDash(aid.available)}
 
                     </p>
 
@@ -1404,7 +1391,7 @@ export default function Dashboard() {
 
               onClick={showNextAids}
 
-              aria-label="Next technical aids"
+              aria-label="Siguientes ayudas técnicas"
 
             >
 
@@ -1436,7 +1423,7 @@ export default function Dashboard() {
 
               <Clock3 size={21} />
 
-              Recent Activity
+              Actividad reciente
 
             </h2>
 
@@ -1456,9 +1443,8 @@ export default function Dashboard() {
 
                 {loading
 
-                  ? "Loading recent activity..."
-
-                  : "No recent loan or return activity is available."}
+                  ? "Cargando actividad reciente..."
+                  : "No hay actividad reciente de préstamos o devoluciones."}
 
               </p>
 
@@ -1517,9 +1503,9 @@ export default function Dashboard() {
           <Link
             to="/reports"
             className="dashboard-action recent-action"
-            aria-label="View all system activities"
+            aria-label="Ver toda la actividad del sistema"
           >
-            View All Activities <ArrowRight size={15} />
+            Ver toda la actividad <ArrowRight size={15} />
           </Link>
 
 
@@ -1610,7 +1596,7 @@ export default function Dashboard() {
 
             <span className="video-label">
 
-              DISCOVER OUR PROJECT
+              CONOCE NUESTRO PROYECTO
 
             </span>
 
@@ -1618,7 +1604,7 @@ export default function Dashboard() {
 
             <h2>
 
-              Discover Mobility <span>Aids</span>
+              Descubre Mobility <span>Aids</span>
 
             </h2>
 
@@ -1626,7 +1612,7 @@ export default function Dashboard() {
 
             <p>
 
-              Mobility, independence and quality of life.
+              Movilidad, independencia y calidad de vida.
 
             </p>
 

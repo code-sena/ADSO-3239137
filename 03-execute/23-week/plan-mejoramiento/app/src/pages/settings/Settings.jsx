@@ -31,10 +31,15 @@ export default function Settings() {
     user?.name ||
     user?.full_name ||
     user?.username ||
-    "Mobility Aids User";
+    "Usuario de Mobility Aids";
 
-  const userEmail = user?.email || "Email not available";
-  const userRole = user?.role || "System User";
+  const userEmail = user?.email || "Correo electrónico no disponible";
+  const role = String(user?.role || "").toLowerCase();
+  const userRole = role === "admin" || role === "administrator"
+    ? "Administrador"
+    : role === "manager"
+      ? "Gestor"
+      : "Usuario del sistema";
 
   const handlePreference = (key) => {
     setPreferences((current) => ({
@@ -81,15 +86,15 @@ export default function Settings() {
         </div>
 
         <div className="settings-hero-content">
-          <span>ACCOUNT & SYSTEM CONFIGURATION</span>
+          <span>CONFIGURACIÓN DE CUENTA Y SISTEMA</span>
 
           <h1>
-            System <strong>Settings</strong>
+            <strong>Configuración</strong> del sistema
           </h1>
 
           <p>
-            Manage your account information, preferences and
-            system experience.
+            Administra la información de tu cuenta, tus preferencias
+            y la configuración del sistema.
           </p>
 
           <div className="settings-hero-line"></div>
@@ -104,8 +109,8 @@ export default function Settings() {
           </div>
 
           <div>
-            <h2>Account Information</h2>
-            <p>Your currently authenticated account.</p>
+            <h2>Información de la cuenta</h2>
+            <p>Cuenta con la que has iniciado sesión.</p>
           </div>
         </div>
 
@@ -126,7 +131,7 @@ export default function Settings() {
 
           <div className="settings-account-status">
             <span></span>
-            Authenticated
+            Sesión autenticada
           </div>
         </div>
       </section>
@@ -139,8 +144,8 @@ export default function Settings() {
           </div>
 
           <div>
-            <h2>System Preferences</h2>
-            <p>Customize your Mobility Aids experience.</p>
+            <h2>Preferencias del sistema</h2>
+            <p>Personaliza tu experiencia en Mobility Aids.</p>
           </div>
         </div>
 
@@ -152,8 +157,8 @@ export default function Settings() {
             </div>
 
             <div className="settings-option-info">
-              <strong>Notifications</strong>
-              <p>Enable notification preferences for your account.</p>
+              <strong>Notificaciones</strong>
+              <p>Activa las notificaciones para tu cuenta.</p>
             </div>
 
             <label className="settings-switch">
@@ -172,8 +177,8 @@ export default function Settings() {
             </div>
 
             <div className="settings-option-info">
-              <strong>Compact View</strong>
-              <p>Save your preference for a more compact interface.</p>
+              <strong>Vista compacta</strong>
+              <p>Guarda tu preferencia para usar una interfaz más compacta.</p>
             </div>
 
             <label className="settings-switch">
@@ -192,7 +197,7 @@ export default function Settings() {
           {saved && (
             <span className="settings-saved-message">
               <CheckCircle2 size={17} />
-              Preferences saved successfully.
+              Las preferencias se guardaron correctamente.
             </span>
           )}
 
@@ -202,7 +207,7 @@ export default function Settings() {
             onClick={savePreferences}
           >
             <Save size={17} />
-            Save Preferences
+            Guardar preferencias
           </button>
         </div>
       </section>
@@ -215,8 +220,8 @@ export default function Settings() {
           </div>
 
           <div>
-            <h2>Security & Privacy</h2>
-            <p>Information about your account protection.</p>
+            <h2>Seguridad y privacidad</h2>
+            <p>Información sobre la protección de tu cuenta.</p>
           </div>
         </div>
 
@@ -226,15 +231,15 @@ export default function Settings() {
           </div>
 
           <div>
-            <strong>Protected Account</strong>
+            <strong>Cuenta protegida</strong>
             <p>
-              Mobility Aids uses authenticated access and protected
-              API requests to help secure administrative information.
+              Mobility Aids utiliza acceso autenticado y solicitudes
+              protegidas a la API para resguardar la información administrativa.
             </p>
           </div>
 
           <span className="settings-security-label">
-            Active session
+            Sesión activa
           </span>
         </div>
       </section>
@@ -244,19 +249,19 @@ export default function Settings() {
         <Info size={20} />
 
         <div>
-          <strong>Mobility Aids Management System</strong>
+          <strong>Sistema de gestión Mobility Aids</strong>
           <p>
-            Technical Aids Bank for Mobility · Account and system settings.
+            Banco de ayudas técnicas para la movilidad · Configuración de cuenta y sistema.
           </p>
         </div>
 
-        <span>Version 1.0</span>
+        <span>Versión 1.0</span>
       </section>
 
       {/* FOOTER */}
       <footer className="settings-footer">
-        <span>Mobility Aids · System Configuration</span>
-        <span>Empowering Mobility, Changing Lives</span>
+        <span>Mobility Aids · Configuración del sistema</span>
+        <span>Promovemos la movilidad, transformamos vidas</span>
       </footer>
 
     </main>
