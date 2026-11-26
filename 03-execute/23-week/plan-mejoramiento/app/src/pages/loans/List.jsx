@@ -18,11 +18,11 @@ function dateLabel(value) {
     : new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 }
 
-function errorText(error) {
+function errorText(error, fallback = "No fue posible completar la operación. Verifica la información e inténtalo nuevamente.") {
   const validation = error?.response?.data?.errors;
   return validation
     ? Object.values(validation).flat().join(" ")
-    : error?.response?.data?.message || "The operation could not be completed.";
+    : error?.response?.data?.message || fallback;
 }
 
 export default function Page() {
@@ -37,6 +37,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [returning, setReturning] = useState("");
+  const [returnToConfirm, setReturnToConfirm] = useState(null);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState(null);
@@ -145,16 +146,35 @@ export default function Page() {
     }
   }
 
-  async function returnAid(loanId, lineId) {
-    if (!window.confirm("Are you sure you want to register the return of this technical aid?")) return;
-    setReturning(lineId);
+  function returnAid(loanId, lineId) {
+    const loan = loans.find((item) => String(item.id) === String(loanId));
+    const line = loan?.items?.find((item) => String(item.id) === String(lineId));
+
     setMessage({ type: "", text: "" });
+    setReturnToConfirm({ loanId, lineId, loan, line });
+  }
+
+  async function confirmReturn() {
+    if (!returnToConfirm) return;
+
+    const { loanId, lineId } = returnToConfirm;
+    setReturning(String(lineId));
+    setMessage({ type: "", text: "" });
+
     try {
       await api.post(`/loans/${loanId}/items/${lineId}/return`);
-      setMessage({ type: "success", text: "Return registered successfully." });
+      setReturnToConfirm(null);
+      setMessage({
+        type: "success",
+        text: "La devolución de la ayuda técnica se registró correctamente.",
+      });
       await refreshAll();
     } catch (error) {
-      setMessage({ type: "error", text: errorText(error) });
+      setReturnToConfirm(null);
+      setMessage({
+        type: "error",
+        text: errorText(error, "No fue posible registrar la devolución. Inténtalo nuevamente."),
+      });
     } finally {
       setReturning("");
     }
@@ -348,6 +368,75 @@ export default function Page() {
               <p className="loans-form-note">Each selected technical aid represents one unit. The system will validate the business rules before saving.</p>
               <footer className="loans-modal-actions"><button type="button" className="loans-secondary-button" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</button><button type="submit" className="loans-create-button" disabled={saving || availableAids.length === 0}>{saving ? "Registering..." : "Confirm Loan"}</button></footer>
             </form>
+          </section>
+        </div>
+      )}
+
+      {returnToConfirm && (
+        <div
+          className="loans-confirm-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !returning) {
+              setReturnToConfirm(null);
+            }
+          }}
+        >
+          <section
+            className="loans-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="loans-confirm-title"
+          >
+            <div className="loans-confirm-icon">
+              <RotateCcw size={27} />
+            </div>
+
+            <span className="loans-confirm-eyebrow">
+              MOBILITY AIDS · DEVOLUCIONES
+            </span>
+
+            <h2 id="loans-confirm-title">Confirmar devolución</h2>
+
+            <p className="loans-confirm-description">
+              ¿Estás seguro de que deseas registrar la devolución de esta ayuda técnica?
+              Verifica los datos antes de continuar.
+            </p>
+
+            <div className="loans-confirm-summary">
+              <div>
+                <span>Beneficiario</span>
+                <strong>{returnToConfirm.loan?.beneficiary_name || "No disponible"}</strong>
+              </div>
+              <div>
+                <span>Código del préstamo</span>
+                <strong>PR-{String(returnToConfirm.loanId).slice(0, 6).toUpperCase()}</strong>
+              </div>
+              <div>
+                <span>Ayuda técnica</span>
+                <strong>{returnToConfirm.line?.aid_reference || "No disponible"}</strong>
+              </div>
+            </div>
+
+            <footer className="loans-confirm-actions">
+              <button
+                type="button"
+                className="loans-confirm-cancel"
+                onClick={() => setReturnToConfirm(null)}
+                disabled={Boolean(returning)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="loans-confirm-submit"
+                onClick={confirmReturn}
+                disabled={Boolean(returning)}
+              >
+                {returning === String(returnToConfirm.lineId)
+                  ? "Registrando..."
+                  : "Confirmar devolución"}
+              </button>
+            </footer>
           </section>
         </div>
       )}

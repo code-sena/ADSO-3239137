@@ -97,3 +97,161 @@
 .loans-details-dates{display:flex;flex-direction:column;gap:4px;color:#68758a;font-size:10px;min-width:125px}
 .loans-details-item .loans-status{flex-shrink:0}
 @media(max-width:560px){.loans-details-summary{grid-template-columns:1fr}.loans-details-item{align-items:flex-start;flex-wrap:wrap}.loans-details-dates{flex:1}}
+
+
+/* Confirmación personalizada de devolución: identidad visual Mobility Aids */
+.loans-confirm-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(7, 27, 50, .68);
+  backdrop-filter: blur(5px);
+  animation: loans-confirm-fade .18s ease-out;
+}
+
+.loans-confirm-modal {
+  width: min(100%, 490px);
+  padding: 30px;
+  border: 1px solid #e7ebf1;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(7, 19, 38, .30);
+  text-align: center;
+  animation: loans-confirm-enter .22s ease-out;
+}
+
+.loans-confirm-icon {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+  border: 1px solid #f1dfbd;
+  border-radius: 17px;
+  background: #fff7e9;
+  color: #bd8426;
+}
+
+.loans-confirm-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #bd8426;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.35px;
+}
+
+.loans-confirm-modal h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 23px;
+  font-weight: 850;
+}
+
+.loans-confirm-description {
+  margin: 10px 0 20px;
+  color: #718096;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.loans-confirm-summary {
+  display: grid;
+  gap: 11px;
+  padding: 15px;
+  border: 1px solid #e7ebf1;
+  border-radius: 12px;
+  background: #f7f9fc;
+  text-align: left;
+}
+
+.loans-confirm-summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.loans-confirm-summary span {
+  color: #8290a3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.loans-confirm-summary strong {
+  color: #26364b;
+  font-size: 12px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.loans-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.loans-confirm-actions button {
+  min-height: 43px;
+  padding: 0 18px;
+  border-radius: 22px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.loans-confirm-cancel {
+  border: 1px solid #dfe5ed;
+  background: #fff;
+  color: #536176;
+}
+
+.loans-confirm-cancel:hover:not(:disabled) {
+  background: #f3f6fa;
+}
+
+.loans-confirm-submit {
+  border: 1px solid #bd8426;
+  background: #bd8426;
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(189, 132, 38, .22);
+}
+
+.loans-confirm-submit:hover:not(:disabled) {
+  border-color: #a97119;
+  background: #a97119;
+  transform: translateY(-1px);
+}
+
+.loans-confirm-actions button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+@keyframes loans-confirm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes loans-confirm-enter {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 520px) {
+  .loans-confirm-modal { padding: 23px 18px; }
+  .loans-confirm-actions { flex-direction: column-reverse; }
+  .loans-confirm-actions button { width: 100%; }
+  .loans-confirm-summary > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .loans-confirm-summary strong { text-align: left; }
+}
