@@ -234,16 +234,13 @@ The inspected `infra/docker-compose.yml` defines the MySQL 8.4 service. It does 
 
 **Location:** `tool/`
 
-An API-based seed tool is a project requirement. The `tool/` directory was inspected and contains no implementation files as of 2026-11-26; the seed tool must therefore be treated as pending.
+The API-based demonstration-data requirement is implemented by `tool/seed_demo_data.py`. It creates deterministic technical-aid catalog records through the current Laravel API and supports up to 5,000 records for the search-performance requirement. Preview mode is the default; writes require the explicit `--apply` flag. The tool requires an existing administrator account and is safe to rerun because it checks the generated reference range before creating records.
 
-Its responsibilities include:
+The tool uses the current unversioned Laravel API routes to verify the five predefined categories and create technical aids. The API exposes category listing but not category creation; categories must first be populated by the existing Laravel `TechnicalAidCategorySeeder`. The target contract's `/api/v1` routes are not implemented, so the tool uses the current `/api` base. It does not create users, beneficiaries, loans, or returns and does not access the database directly.
 
-- Creating the required initial data.
-- Registering the five predefined technical aid categories.
-- Using the documented API endpoints.
-- Producing reproducible demonstration data.
+`tool/test_seed_demo_data.py` validates URL safety, deterministic payloads, pagination, preview behavior, and creation of only missing records without a running API or database. `tool/README.md` documents setup and commands.
 
-When implemented, the seed process must respect the API contract and the approved project specification.
+The offline checks do not establish a successful integration run against a configured Laravel API. That verification remains pending.
 
 ------------------------------------------------------------------------------------------------------------------------
 

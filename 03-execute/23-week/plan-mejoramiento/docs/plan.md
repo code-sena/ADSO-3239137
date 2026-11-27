@@ -158,7 +158,7 @@ Activities:
 
 **Progress as of 2026-11-26:**
 
-`infra/docker-compose.yml` defines a MySQL 8.4 service. It does not compose the Laravel and React services into the required one-command full environment. The category seeder exists in `api/`; `tool/` has no implementation files. API-based demonstration-data seeding and full infrastructure startup remain pending.
+`infra/docker-compose.yml` defines a MySQL 8.4 service. It does not compose the Laravel and React services into the required one-command full environment. The API-based catalog seeder now exists in `tool/seed_demo_data.py`; it verifies the five categories through the API and creates reproducible technical-aid records. The categories must first be populated by the existing Laravel category seeder because the API has no category-creation endpoint. Offline checks are available; a live API seeding run and 5,000-record performance measurement remain pending.
 
 **Deliverable:** Reproducible containerized environment and functional API-based seeder.
 

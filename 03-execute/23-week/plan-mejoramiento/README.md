@@ -416,6 +416,9 @@ Mobility-Aids/
 │
 ├── infra/
 ├── tool/
+│   ├── README.md
+│   ├── seed_demo_data.py
+│   └── test_seed_demo_data.py
 ├── iniciar-mobility-aids.ps1
 └── README.md
 ```
@@ -458,6 +461,8 @@ The database structure is documented in:
 `docs/data-model.md`
 
 Migrations define the database structure, while seeders provide initial or demonstration data where configured.
+
+The API-based demonstration catalog seeder is documented in [`tool/README.md`](tool/README.md). It previews by default and requires `--apply` to create missing records.
 
 Database migrations must be executed only after verifying the environment and database backup.
 
